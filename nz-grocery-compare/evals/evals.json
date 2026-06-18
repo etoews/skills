@@ -1,0 +1,39 @@
+{
+  "skill_name": "nz-grocery-compare",
+  "note": "Evals cover the two reproducible, offline-testable surfaces of the skill: (1) building the interactive comparison report from a captured dataset, and (2) the item-matching/flagging judgement. The live browser-automation surface (reading carts, adding to carts across the real supermarket sites) needs an authenticated Chrome session and cannot be benchmarked deterministically.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "interactive-report-from-dataset",
+      "prompt": "I've already captured grocery price data across three NZ supermarkets into a JSON file at FIXTURE_PATH. Build me a single HTML comparison report I can open in my browser — I want to be able to search it, sort by any column, and filter it, and I want to see which store is cheapest for each item plus the total per store. Save the finished .html into OUTPUT_DIR.",
+      "files": ["sample-3store.json"],
+      "expected_output": "A single self-contained .html file with a searchable/sortable/filterable table, three store summary cards with correct subtotals ($58.97 Woolworths, $63.94 New World, $52.43 PAK'nSAVE), the cheapest store marked per row, sale prices highlighted, and the PAK'nSAVE Caesar salad shown as unavailable (n/a).",
+      "assertions": [
+        {"name": "single_html_file", "text": "Exactly one .html file is produced in the output directory."},
+        {"name": "self_contained", "text": "The HTML is self-contained — no external <script src> or <link href> to remote JS/CSS; it opens and works offline."},
+        {"name": "has_search", "text": "The report has a text search/filter input for finding items."},
+        {"name": "has_sortable_columns", "text": "Column headers are sortable (clicking a header sorts rows; price columns sort numerically)."},
+        {"name": "has_filters", "text": "The report has filter controls beyond search — at minimum filtering by category and/or which store is cheapest."},
+        {"name": "all_items_present", "text": "All 8 items from the dataset appear in the report."},
+        {"name": "store_subtotals_correct", "text": "The three store subtotals are shown and correct: Woolworths $58.97, New World $63.94, PAK'nSAVE $52.43."},
+        {"name": "cheapest_marked", "text": "The cheapest store per row is visually distinguished (e.g. a rail/colour), and PAK'nSAVE is shown as the cheapest basket overall."},
+        {"name": "unavailable_flagged", "text": "The PAK'nSAVE Caesar salad cell is shown as unavailable / n/a rather than a price."},
+        {"name": "sale_highlighting", "text": "Sale/special prices are gently emphasised (e.g. the New World Finish powder special and the member-price items carry a badge or tint)."}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "match-and-flag-decisions",
+      "prompt": "I'm copying my Woolworths grocery list into a New World cart. For each of the four source items below I've pasted the New World search results. For each one, tell me: which New World product to add (or that there's no good match), classify it as exact / similar / flag, and give a one-line reason. Write your answers as a JSON array to OUTPUT_DIR/decisions.json with fields: source, chosen_product (or null), classification, reason.\n\n1) Source: \"Arnotts Salada Crackers Original 250g\"\n   Results: \"Arnott's Salada Original Crackers\" 250g $3.49; \"Arnott's Salada Sourdough Crackers\" 250g $3.99\n\n2) Source: \"Meadow Fresh Milk Standard Original 1L\" (blue-top standard milk)\n   Results: \"Pams Value Standard Milk\" 1l $3.22; \"Anchor Blue Milk\" 1l $3.52; \"Meadow Fresh Original Milk\" 600ml $2.69; \"Meadow Fresh Original Milk\" 300ml $1.59\n\n3) Source: \"Woolworths Olives Black Sliced 430g\" (canned sliced black olives)\n   Results: \"Delmaine Pitted Black Hojblanca Olives\" 450g $6.69; \"Delmaine Pitted Green Manzanilla Olives\" 450g $6.69 (no sliced black olives in the results)\n\n4) Source: \"Leaderbrand Caesar Salad Kit 250g\" (a make-it-yourself salad kit)\n   Results: \"Best Foods Plant-Based Caesar Salad Dressing\" 250ml $5.99; \"Fresh To Go Chicken Caesar Bowl\" 190g $6.49 (a ready meal); \"Wild Appetite Classic Caesar Dressing\" 250ml $5.49",
+      "files": [],
+      "expected_output": "decisions.json with 4 entries. Item 1: exact, Arnott's Salada Original Crackers 250g. Item 2: similar, a 1L standard milk (Anchor Blue Milk 1l, or Pams Value Standard Milk 1l) because there is no Meadow Fresh 1L. Item 3: similar with a note that sliced black olives aren't stocked so whole pitted black olives (Delmaine Pitted Black Hojblanca 450g) are the substitute — or flag; either is acceptable as long as it notes sliced isn't available. Item 4: flag — no caesar salad kit (only dressings and a ready chicken bowl).",
+      "assertions": [
+        {"name": "valid_json_4_entries", "text": "decisions.json exists, parses as JSON, and has 4 entries with the required fields."},
+        {"name": "item1_exact_original", "text": "Item 1 is classified exact and chooses Arnott's Salada ORIGINAL Crackers 250g (not the Sourdough)."},
+        {"name": "item2_similar_1L_milk", "text": "Item 2 is classified similar and chooses a 1L standard milk (Anchor Blue Milk 1l or Pams Value Standard Milk 1l) — NOT a 600ml/300ml Meadow Fresh, and not exact."},
+        {"name": "item3_notes_no_sliced", "text": "Item 3 either picks the whole pitted black olives as a similar substitute or flags it, and explicitly notes that sliced black olives are not available."},
+        {"name": "item4_flag_no_kit", "text": "Item 4 is classified flag — it recognises there is no caesar salad kit (the results are dressings and a ready meal, not a substitute kit)."}
+      ]
+    }
+  ]
+}

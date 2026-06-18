@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# nz-grocery-compare runtime output (generated when the skill runs)
+comparison-report-*.html
+totals-over-time-*.html
+totals-history.json
+
+# skill-creator eval / benchmark workspaces
+*-workspace/

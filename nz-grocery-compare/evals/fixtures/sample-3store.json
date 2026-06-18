@@ -1,0 +1,52 @@
+{
+  "title": "Grocery Price Comparison — three stores",
+  "generated": "2026-06-18 18:54 NZST",
+  "source_store": "Woolworths",
+  "stores": [
+    {"key":"ww","name":"Woolworths","location":"Online trolley","subtotal":58.97,"savings":9.67},
+    {"key":"nw","name":"New World","location":"Wellington City","subtotal":63.94,"fees":1.50,"savings":4.50},
+    {"key":"pak","name":"PAK'nSAVE","location":"Kilbirnie","subtotal":52.43,"fees":1.00,"note":"Caesar unavailable; Peroni not added"}
+  ],
+  "items": [
+    {"category":"Bakery","item":"Toast Bread Soya & Linseed 750g","match":"exact",
+     "cells":{
+       "ww":{"name":"Freyas Toast Bread Soya & Linseed","line":9.32,"each":4.66,"qty":2},
+       "nw":{"name":"Freya's Swiss Soya Linseed Bread","line":9.32,"each":4.66,"qty":2,"sale":true,"sale_label":"low price"},
+       "pak":{"name":"Freya's Swiss Soya Linseed Bread","line":8.70,"each":4.35,"qty":2}}},
+    {"category":"Beer & Wine","item":"Peroni Nastro Azzurro 0.0% 12x330mL","match":"exact",
+     "cells":{
+       "ww":{"name":"Peroni Non Alcoholic","line":24.70,"sale":true,"sale_label":"member"},
+       "nw":{"name":"Peroni 0.0% Bottles","line":25.99},
+       "pak":{"name":"Peroni 0.0% Bottles","line":24.99,"note":"18+ gate blocked the cart add","unavailable":false}}},
+    {"category":"Fridge & Deli","item":"Standard / Blue Milk 1L","match":"similar","note":"Meadow Fresh vs Anchor",
+     "cells":{
+       "ww":{"name":"Meadow Fresh Standard","line":3.69},
+       "nw":{"name":"Anchor Blue Milk","line":3.52},
+       "pak":{"name":"Anchor Blue Milk","line":3.47}}},
+    {"category":"Fruit & Veg","item":"Bananas (loose, by weight)","match":"exact","note":"compared per kg",
+     "cells":{
+       "ww":{"name":"Yellow Bananas","per_kg":3.75,"line":4.69,"qty":1.25},
+       "nw":{"name":"Bananas","per_kg":3.79,"line":4.55,"qty":1.2},
+       "pak":{"name":"Bananas","per_kg":3.29,"line":3.95,"qty":1.2}}},
+    {"category":"Fruit & Veg","item":"Caesar Salad Kit 250g","match":"exact",
+     "cells":{
+       "ww":{"name":"Leaderbrand Caesar Kit","line":6.20},
+       "nw":{"name":"LeaderBrand Caesar Salad","line":6.49},
+       "pak":{"unavailable":true,"note":"No caesar salad kit stocked at Kilbirnie"}}},
+    {"category":"Household","item":"Finish Dishwasher Powder Lemon 2kg","match":"exact",
+     "cells":{
+       "ww":{"name":"Finish Powder Lemon","line":12.80,"sale":true,"sale_label":"member"},
+       "nw":{"name":"Finish Lemon Sparkle","line":9.99,"was":17.99,"sale":true,"sale_label":"special"},
+       "pak":{"name":"Finish Lemon Sparkle","line":13.89}}},
+    {"category":"Pantry","item":"Taco Seasoning Spice Mix 30g x2","match":"exact",
+     "cells":{
+       "ww":{"name":"Old El Paso Taco Seasoning","line":6.00,"each":3.00,"qty":2},
+       "nw":{"name":"Old El Paso Taco Spice Mix","line":5.98,"each":2.99,"qty":2},
+       "pak":{"name":"Old El Paso Taco Spice Mix","line":4.98,"each":2.49,"qty":2}}},
+    {"category":"Pantry","item":"Dark Baking Chocolate","match":"similar","note":"Cadbury vs Nestlé vs Pams compound",
+     "cells":{
+       "ww":{"name":"Cadbury Choc Chips Dark 200g","line":6.50},
+       "nw":{"name":"Nestlé Bakers' Choice Bits 200g","line":7.69},
+       "pak":{"name":"Pams Dark Compound Chips 400g","line":4.39}}}
+  ]
+}
