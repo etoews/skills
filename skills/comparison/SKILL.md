@@ -42,14 +42,20 @@ before automating those sites.
 
 ## Workflow
 
+**All output goes in a `comparison/` directory.** Every file this skill produces —
+the parsed-basket working JSON, the comparison data JSON, both HTML reports, and the
+`totals-history.json` ledger — is written under a `comparison/` directory in the
+current working directory. Use this prefix on every path below. The report scripts
+create the directory automatically, so you don't need to `mkdir` it first.
+
 ### 1. Read the source basket
 - Woolworths: `woolworths.co.nz/reviewtrolley` → `get_page_text`. Parse into items
   (name, size, price-each or per-kg, quantity, item-total, special label). See
   `references/woolworths.md`.
 - A Foodstuffs store as source: read its cart slide-out (snippet in
   `references/foodstuffs-platform.md`).
-- **Persist the parsed basket to a JSON working file immediately** so a long run
-  survives context compaction.
+- **Persist the parsed basket to `comparison/basket.json` immediately** so a long
+  run survives context compaction.
 
 ### 2. For each item, match + add at each target store
 For each source item, at each target store: search by URL, decide the match, add it.
@@ -71,18 +77,20 @@ quantity actually landed — re-check, because typed quantities silently stay at
 Reconcile the cart count: source line count should equal items-added + items-flagged.
 
 ### 4. Build the interactive report (and record the run's totals)
-Assemble one comparison JSON (schema in the header of `scripts/build_report.py` and
-summarised in `references/matching-and-flags.md`) and run:
+Assemble one comparison JSON at `comparison/data.json` (schema in the header of
+`scripts/build_report.py` and summarised in `references/matching-and-flags.md`) and
+run:
 ```
-python3 scripts/build_report.py <data.json> -o comparison-report-<YYYYMMDD-HHMMSS>.html
+python3 scripts/build_report.py comparison/data.json -o comparison/comparison-report-<YYYYMMDD-HHMMSS>.html
 ```
 Get the timestamp from `date`. The script owns all styling/interactivity — you only
 produce the JSON, never hand-write report HTML. **The same command automatically
 appends this run's per-store totals (subtotal + fees + item count) to a history
-ledger** — `totals-history.json` next to the data file by default, or pass
-`--history <path>` to keep one shared ledger across runs (recommended, so the trend
-builds up over time). It de-dupes on the run timestamp, so make sure `generated` is
-set to the real run time. Use `--no-history` to skip recording.
+ledger** — `comparison/totals-history.json` next to the data file by default, or pass
+`--history comparison/totals-history.json` explicitly to keep one shared ledger across
+runs (recommended, so the trend builds up over time). It de-dupes on the run
+timestamp, so make sure `generated` is set to the real run time. Use `--no-history`
+to skip recording.
 
 Open the report for the user (`open` on macOS) and summarise: the cheapest basket,
 the headline totals, and every flagged item with its reason.
@@ -91,7 +99,7 @@ the headline totals, and every flagged item with its reason.
 Whenever there is more than one run in the ledger (or the user asks how totals are
 trending), generate the trend report from the ledger:
 ```
-python3 scripts/build_trends.py <totals-history.json> -o totals-over-time-<YYYYMMDD-HHMMSS>.html
+python3 scripts/build_trends.py comparison/totals-history.json -o comparison/totals-over-time-<YYYYMMDD-HHMMSS>.html
 ```
 It charts each store's basket total across runs (SVG line chart, no dependencies),
 with per-store latest/delta cards, a "cheapest league" tally, and a run-by-run

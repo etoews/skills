@@ -49,10 +49,11 @@ with a reason.** Push through all items. It's fine for a store to be missing one
 two items (flag them); it is not fine to abandon the run with items unaccounted for.
 
 ## Building the report
-Assemble a single comparison JSON (schema documented in the header of
-`scripts/build_report.py`) and run:
+Assemble a single comparison JSON at `comparison/data.json` (schema documented in
+the header of `scripts/build_report.py`) and run (all output goes under the
+`comparison/` directory, which the script creates if needed):
 ```
-python3 scripts/build_report.py <data.json> -o comparison-report-<stamp>.html
+python3 scripts/build_report.py comparison/data.json -o comparison/comparison-report-<stamp>.html
 ```
 The script produces a **self-contained, interactive** HTML report:
 - A store summary card per store (subtotal, fees, savings, "cheapest basket" badge).
@@ -71,15 +72,15 @@ don't hand-write report HTML. Use a real timestamp for `generated` and the filen
 ### Totals ledger + trend report
 `build_report.py` also **appends this run's per-store totals** (subtotal + fees +
 item count, plus the run timestamp, source store and cheapest store) to a history
-ledger — `totals-history.json` beside the data file by default, or `--history
-<path>` for a shared ledger. It de-dupes on the run timestamp, so set `generated`
-to the real run time and reuse the **same ledger path every run** so history
-accumulates. `--no-history` skips it.
+ledger — `comparison/totals-history.json` beside the data file by default, or
+`--history comparison/totals-history.json` to pass it explicitly. It de-dupes on the
+run timestamp, so set `generated` to the real run time and reuse the **same ledger
+path every run** so history accumulates. `--no-history` skips it.
 
 When the ledger has more than one run (or the user wants to see spend over time),
 build the trend report:
 ```
-python3 scripts/build_trends.py <totals-history.json> -o totals-over-time-<stamp>.html
+python3 scripts/build_trends.py comparison/totals-history.json -o comparison/totals-over-time-<stamp>.html
 ```
 It charts each store's basket total across runs and tallies who was cheapest. The
 ledger handles stores that come and go between runs (gaps in a line).

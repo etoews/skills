@@ -5,10 +5,10 @@
 __pycache__/
 *.pyc
 
-# comparison skill runtime output (generated when the skill runs)
-comparison-report-*.html
-totals-over-time-*.html
-totals-history.json
+# comparison skill runtime output (generated when the skill runs).
+# Anchored with a leading slash so it only matches a top-level output
+# directory, never the skills/comparison/ source.
+/comparison/
 
 # skill-creator eval / benchmark workspaces
 *-workspace/

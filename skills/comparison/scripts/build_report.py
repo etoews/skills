@@ -428,6 +428,7 @@ def record_history(data: dict, totals: dict, history_path: Path) -> int:
     runs = [e for e in runs if e.get("timestamp") != entry["timestamp"]]
     runs.append(entry)
     runs.sort(key=lambda e: e.get("timestamp") or "")
+    history_path.parent.mkdir(parents=True, exist_ok=True)
     history_path.write_text(json.dumps({"history": runs}, ensure_ascii=False, indent=2), encoding="utf-8")
     return len(runs)
 
@@ -464,6 +465,7 @@ def main():
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         out = data_path.with_name(f"comparison-report-{stamp}.html")
 
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
     print(f"Wrote {out}")
 

@@ -264,6 +264,7 @@ def main():
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         out = history_path.with_name(f"totals-over-time-{stamp}.html")
 
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
     n = len(data["history"])
     print(f"Wrote {out} ({n} run{'s' if n != 1 else ''} charted)")
