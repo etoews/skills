@@ -1,0 +1,14 @@
+{
+  "name": "kiwi-trolley",
+  "description": "New Zealand grocery tooling for Claude Code.",
+  "owner": {
+    "name": "Everett Toews",
+    "email": "everett.toews@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "kiwi-trolley",
+      "source": "./"
+    }
+  ]
+}
