@@ -1,50 +1,63 @@
 # security-review-gate
 
-A hard security-review gate for git. It runs the `/security-review` command and
-**blocks high/critical findings before code reaches `main`** — both when you run
-git by hand and when Claude runs it in a session. Opt-in per repository.
+An in-session gate that requires a security review before Claude pushes or merges
+to `main`. It is a Claude Code `PreToolUse` hook that blocks `git push` / `git
+merge` into main until an **approval receipt** exists for the commit being
+introduced. Opt-in per repository.
 
-See [`SKILL.md`](SKILL.md) for install/usage. This file covers how it works and
-the one item still to validate end-to-end.
+See [`SKILL.md`](SKILL.md) for install/usage. This file covers how it works, the
+trust model, and its limits.
 
-## Architecture
+## Flow
 
 ```
-                 ┌─────────────────────── lib/ (shared) ───────────────────────┐
- git push  ─────▶│ gate.sh  ──▶ severity.sh  cache.sh  review.sh  log.sh        │
- (pre-push hook) │   bypass? → cache hit? → run /security-review → decide →     │
- git merge ─────▶│   cache verdict → allow (0) / block (1) / fail-closed (3)    │
- (PreToolUse)    └──────────────────────────────────────────────────────────────┘
+Claude: git push / git merge into main
+   │
+   ▼
+PreToolUse hook ── receipt for this commit SHA?
+   ├── yes ─────────────────────────────────▶ allow
+   └── no  ─▶ deny: "run /security-review, then approve.sh <sha>"
+                │
+                ▼
+        Claude runs /security-review (interactive)
+                │  no findings ≥ threshold
+                ▼
+        approve.sh <sha> [max_severity]  ──▶ records receipt under .git/
+                │
+                ▼
+        Claude retries push/merge ──────────▶ allow
 ```
 
-- **`lib/severity.sh`** — pure ranking + the block/allow decision against the
-  threshold.
-- **`lib/cache.sh`** — SHA-keyed verdict cache under `.git/` (never committed).
-  Coordinates the two hooks so the same commit is reviewed once.
-- **`lib/review.sh`** — builds the headless request and extracts a
-  schema-validated verdict from `claude -p --output-format json`. The verdict
-  lands in `.structured_output` (with a `.result` string fallback).
-- **`lib/gate.sh`** — the orchestrator both hooks call: bypass → cache → review
-  → severity decision → cache → human summary, with structured log events.
-- **`hooks/pre-push`** — git hook: reads ref updates, reviews the pushed range,
-  aborts on block. The universal backstop.
-- **`hooks/pretooluse.sh`** — Claude Code hook: detects in-session `git push` /
-  `git merge` into main, emits `permissionDecision: deny` on block. The primary
-  path. Never wedges a session: if it cannot load, it allows and relies on the
-  pre-push backstop.
-- **`install.sh` / `uninstall.sh`** — per-repo wiring (copy scripts, set
-  `core.hooksPath`, merge the PreToolUse hook into Claude settings).
+## Components
 
-## Design decisions
+- **`hooks/pretooluse.sh`** — detects in-session `git push` and `git merge` into
+  `main`/`master`, computes the commit SHA, allows on a receipt (or
+  `SKIP_SECURITY_REVIEW`), otherwise denies with actionable instructions. Never
+  wedges the session: if it cannot load its library, it allows.
+- **`approve.sh <sha> [max_severity]`** — records an approval receipt for a
+  commit; refuses if `max_severity` is at or above the threshold, or if the
+  severity/commit is invalid.
+- **`lib/receipt.sh`** — SHA-keyed receipts under `.git/` (never committed).
+- **`lib/severity.sh`** — severity ranking + the at/above-threshold decision.
+- **`lib/gate.sh`** — umbrella that sources the leaf modules and provides
+  `gate_truthy` / `gate_threshold`.
+- **`lib/log.sh`** — structured log events for observability.
+- **`install.sh` / `uninstall.sh`** — per-repo wiring of the PreToolUse hook in
+  Claude settings (no git hooks).
 
-- **Fail closed.** A missing `claude`, an error envelope, a budget cap, or an
-  unparseable verdict all **block** (exit 3) with the bypass hint printed — never
-  a silent gap.
-- **ff-merge reality.** Git has no native pre-fast-forward-merge hook, so merges
-  are gated in-session via the PreToolUse hook, and the pre-push hook enforces at
-  the push boundary for everyone.
-- **Threshold default `high`.** Lower findings are surfaced as warnings but do
-  not block. Configurable.
+## Trust model and limits
+
+- **In-session only.** As a `PreToolUse` hook it fires only when Claude runs git.
+  Manual terminal pushes, IDE pushes, and CI are not gated. (An earlier design
+  added a git `pre-push` backstop for those; it was intentionally removed.)
+- **Cooperative, not verified.** A shell hook cannot run the interactive
+  `/security-review` or independently confirm one happened. The gate enforces
+  that an approval *receipt* exists; the receipt is written by `approve.sh`,
+  which Claude runs after reviewing. The threshold guard in `approve.sh` is a
+  guardrail, not a cryptographic check.
+- **Why not headless?** Driving `/security-review` through `claude -p` runs zero
+  turns and returns nothing (the command is interactive-only; confirmed by a live
+  spike), so the gate uses the real interactive command plus a receipt instead.
 
 ## Testing
 
@@ -52,22 +65,9 @@ the one item still to validate end-to-end.
 bash tests/run.sh
 ```
 
-Dependency-free bash harness (no bats). A stub `claude`
-(`tests/stubs/claude-stub.sh`) emits canned envelopes matching the real CLI
-shape, so the suite is hermetic and spends no tokens. Coverage: severity
-decisions, cache round-trip/coordination, verdict parsing and rejection,
-gate allow/block/threshold/fail-closed plus logged events, both hooks, and
-install/uninstall (idempotency, foreign-settings preservation, the installed
-hook actually blocking, hooksPath guard).
-
-## Open validation item
-
-The headless **mechanism** is validated (envelope shape, `--json-schema`
-→ `.structured_output`, read-only tools, cost cap). What still needs a live
-end-to-end check is the **content contract**: confirm that
-`claude -p "/security-review …"` over a real diff returns a verdict whose
-`max_severity` and `findings` populate as expected, and tune the prompt
-(`SECURITY_REVIEW_PROMPT`) and allowed-tools if the command needs more than the
-read-only git set. The runner is structured so this is a config change, not a
-rewrite. Until then, fail-closed means a misbehaving review blocks rather than
-waves code through.
+Dependency-free bash harness (no bats), hermetic, no tokens. Coverage: severity
+decisions, receipt round-trip/isolation, the PreToolUse hook
+(deny/allow/bypass/merge-vs-push/non-gated), `approve.sh`
+(record/refuse-on-severity/invalid input), and install/uninstall (idempotency,
+foreign-settings preservation, the installed hook denying without a receipt and
+allowing with one).

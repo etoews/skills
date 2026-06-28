@@ -1,74 +1,64 @@
 ---
 name: security-review-gate
-description: Use when the user wants to install, configure, or manage a hard security-review gate that blocks high/critical findings before a git merge to main or a branch push. Wires up a git pre-push hook plus a Claude Code PreToolUse hook that run /security-review headlessly and fail closed.
+description: Use when the user wants to install, configure, or manage an in-session gate that requires a /security-review (with approval recorded for the commit) before Claude runs a git push or a git merge into main. Opt-in per repo, receipt-based, bypassable with SKIP_SECURITY_REVIEW.
 ---
 
 # Security Review Gate
 
-A hard gate that runs the `/security-review` command and **blocks** when it finds
-issues at or above a severity threshold (default `high`), before code reaches
-`main`. Opt-in per repository.
+An in-session gate that requires a security review before Claude pushes or merges
+to `main`. When Claude is about to run `git push` or `git merge` into
+`main`/`master`, the gate checks for an **approval receipt** for the commit being
+introduced. No receipt → the action is **denied** with instructions to run
+`/security-review` and record approval. Opt-in per repository.
 
-## What it installs
+> **Scope:** this gate fires **only inside Claude Code sessions** (it is a
+> `PreToolUse` hook). Pushes you run by hand in a terminal, an IDE, or CI are not
+> gated. Enforcement is cooperative: a hook cannot run or verify the interactive
+> `/security-review` itself, so it relies on the approval step being run honestly.
 
-Two coordinated hooks that share one runner:
+## How it works
 
-1. **git `pre-push` hook** — the universal backstop. Fires on every push
-   regardless of who runs git (you, Claude, an IDE). Reviews the commits being
-   pushed; aborts the push on high/critical findings.
-2. **Claude Code `PreToolUse` hook** — the primary, in-session gate. Fires
-   before Claude runs `git push` or `git merge` into `main`/`master`; denies the
-   tool call (Claude sees the findings and stops) on high/critical.
+1. Claude is about to run `git push` / `git merge` into main.
+2. The `PreToolUse` hook computes the commit SHA being introduced and looks for a
+   receipt.
+   - **Receipt present** → allow.
+   - **No receipt** → **deny**, telling Claude to run `/security-review` over the
+     relevant range and, if there are no findings at or above the threshold,
+     record approval:
+     ```
+     bash .security-review-gate/approve.sh <sha> [max_severity]
+     ```
+3. `approve.sh` records a receipt for that SHA (refusing if `max_severity` is at
+   or above the threshold). Claude retries the push/merge and it proceeds.
 
-A **SHA-keyed verdict cache** under `.git/` coordinates the two so the same
-commits are never reviewed twice, and the gate **fails closed** (blocks) if the
-review cannot complete.
+Receipts are keyed by commit SHA and stored under `.git/` (never committed), so
+re-pushing the same commit does not re-prompt.
 
 ## Install / uninstall
 
-Run from inside the target repo, or pass its path:
-
 ```bash
-# install (shared settings)
-bash <path-to-skill>/install.sh [target-repo]
-# install but keep the Claude hook personal (.claude/settings.local.json)
-bash <path-to-skill>/install.sh --local [target-repo]
-# remove
+bash <path-to-skill>/install.sh [target-repo]      # shared settings
+bash <path-to-skill>/install.sh --local [target-repo]   # personal settings.local.json
 bash <path-to-skill>/uninstall.sh [target-repo]
 ```
 
-Install copies the scripts to `<repo>/.security-review-gate/`, sets
-`core.hooksPath`, and merges the PreToolUse hook into Claude settings. It is
-idempotent and refuses to clobber an existing `core.hooksPath`.
+Install copies the scripts to `<repo>/.security-review-gate/` and merges the
+PreToolUse hook into Claude settings. Idempotent. No git hooks are touched.
 
 ## Configuration (environment variables)
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `SECURITY_REVIEW_THRESHOLD` | `high` | Block at/above this severity (`low`..`critical`). |
-| `SECURITY_REVIEW_MODEL` | `sonnet` | Model used for the headless review. |
-| `SECURITY_REVIEW_MAX_USD` | `1.00` | Per-review cost cap. |
-| `SECURITY_REVIEW_PROMPT` | built-in | Override the review prompt (`{RANGE}` is substituted). |
-| `SECURITY_REVIEW_ALLOWED_TOOLS` | read-only git + Read/Grep/Glob | Tools the review may use. |
-| `SKIP_SECURITY_REVIEW` | unset | Set truthy to bypass both hooks. |
+| `SECURITY_REVIEW_THRESHOLD` | `high` | Severity at/above which approval is required; `approve.sh` refuses a higher `max_severity`. |
+| `SKIP_SECURITY_REVIEW` | unset | Set truthy to bypass the gate. |
 | `GATE_LOG_LEVEL` / `GATE_LOG_FILE` | `info` / unset | Observability. |
-
-## Bypass (use sparingly)
-
-- `git push --no-verify` skips the pre-push hook.
-- `SKIP_SECURITY_REVIEW=1` bypasses both hooks.
-
-## Requirements
-
-- `jq` and the `claude` CLI on `PATH`.
-- The gate runs `/security-review` via `claude -p`, so each gated push/merge
-  spends tokens; the cache avoids re-paying for the same commits.
 
 ## Coexistence with the security-guidance plugin
 
-That plugin does a **soft, async** review on push/commit. This gate is the
-**hard** block. If both are installed, disable the plugin's push/commit review
-to avoid double LLM reviews on in-session pushes.
+That plugin does a soft, async LLM review on push/commit and is complementary:
+it can run the review automatically while this gate enforces the
+approval-before-merge/push step. They do not conflict (this gate runs no LLM
+itself).
 
 ## Verifying a change to the gate itself
 
@@ -76,6 +66,5 @@ to avoid double LLM reviews on in-session pushes.
 bash <path-to-skill>/tests/run.sh
 ```
 
-The suite uses a stub `claude`, so it is fast, hermetic, and spends no tokens.
-See `README.md` for architecture and the one open validation item (the exact
-headless `/security-review` verdict contract).
+Dependency-free bash suite; fast, hermetic, spends no tokens. See `README.md`
+for architecture and the trust model.
