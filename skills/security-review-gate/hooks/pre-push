@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# git pre-push hook — the universal backstop.
+#
+# Runs the security review over the commits being pushed and aborts the push
+# (nonzero exit) when the review finds something at or above the configured
+# threshold. Fires for every push regardless of who runs git. Bypass with
+# `git push --no-verify` or SKIP_SECURITY_REVIEW=1.
+#
+# git passes <remote-name> <remote-url> as args and, on stdin, one line per
+# ref being updated: <local ref> <local sha> <remote ref> <remote sha>.
+set -u
+
+ZERO=0000000000000000000000000000000000000000
+
+# Locate the gate library relative to this script (works both in-repo for the
+# test suite and when installed under .security-review-gate/).
+_self="$(cd "$(dirname "$0")" && pwd)"
+_lib=""
+for _c in "${GATE_LIB_DIR:-}" "$_self/lib" "$_self/../lib" "$_self/../../lib"; do
+  if [ -n "$_c" ] && [ -f "$_c/gate.sh" ]; then _lib="$_c"; break; fi
+done
+if [ -z "$_lib" ]; then
+  echo "security-review-gate: cannot locate gate library; allowing push" >&2
+  exit 0
+fi
+# shellcheck source=/dev/null
+. "$_lib/gate.sh"
+
+# _push_range <local_sha> <remote_sha> : git range describing what is being pushed.
+_push_range() {
+  local local_sha="$1" remote_sha="$2" b base
+  if [ "$remote_sha" != "$ZERO" ]; then
+    printf '%s..%s' "$remote_sha" "$local_sha"; return
+  fi
+  # New branch on the remote: review what it adds over the default branch.
+  for b in main master; do
+    if git rev-parse --verify -q "refs/heads/$b" >/dev/null 2>&1 \
+       && [ "$(git rev-parse "$b")" != "$local_sha" ]; then
+      base="$(git merge-base "$b" "$local_sha" 2>/dev/null)" \
+        && { printf '%s..%s' "$base" "$local_sha"; return; }
+    fi
+  done
+  printf '%s' "$local_sha"   # fallback: the tip commit
+}
+
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "${local_ref:-}" ] && continue
+  [ "$local_sha" = "$ZERO" ] && continue   # branch deletion: nothing to review
+  range="$(_push_range "$local_sha" "$remote_sha")"
+  gate_check "$local_sha" "$range" "push to ${remote_ref##*/}" || status=1
+done
+
+exit "$status"
