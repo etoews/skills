@@ -9,3 +9,6 @@
 # Logs / temp
 *.log
 .tmp/
+
+# Scratch / experiments (untracked)
+.scratch/
