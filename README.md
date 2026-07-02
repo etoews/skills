@@ -6,6 +6,7 @@ A personal collection of [Claude](https://claude.com/claude-code) skills.
 
 | Skill | Summary |
 |-------|---------|
+| [brainstorm-with-docs](skills/brainstorm-with-docs/) | Thin conductor that runs `superpowers:brainstorming`, then `grill-with-docs` against the committed spec (glossary, ADRs), then `superpowers:writing-plans`. Copies nothing from the upstream skills so their updates keep flowing. |
 | [security-review-gate](skills/security-review-gate/) | In-session gate that requires a `/security-review`, with approval recorded for the commit, before Claude runs `git push` or `git merge` into `main`. Opt-in per repo. |
 
 ## What is a skill?
