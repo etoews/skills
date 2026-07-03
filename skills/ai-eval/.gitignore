@@ -1,0 +1,11 @@
+# Python env managed by uv (recreate with `uv sync`)
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets / local overrides
+.env
+
+# Local Phoenix data (named docker volume is separate; this is for bind mounts)
+phoenix_data/
