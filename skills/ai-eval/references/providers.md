@@ -16,26 +16,32 @@ Put keys in a `.env` file in the skill directory (git-ignored) or export them;
 
 ## Effort
 
-`--effort` is a portable knob, mapped to LiteLLM's `reasoning_effort`:
+`--effort` is a portable knob with a per-provider mapping:
 
-| `--effort` | LiteLLM `reasoning_effort` | Notes |
+| `--effort` | Anthropic (`output_config.effort`) | Others (LiteLLM `reasoning_effort`) |
 |---|---|---|
-| none | (unset) | no reasoning params sent |
-| minimal | minimal | |
-| low | low | |
-| medium | medium | |
-| high | high | |
-| xhigh | high (+ thinking budget on Anthropic) | see below |
+| none | (unset) | (unset) |
+| minimal | low | minimal |
+| low | low | low |
+| medium | medium | medium |
+| high | high | high |
+| xhigh | xhigh | high |
+| max | max | high |
 
-`xhigh` has no LiteLLM equivalent. On Anthropic models it instead sends an
-explicit extended-thinking budget (`thinking={type: enabled, budget_tokens:
-32000}`), drops `temperature` (thinking requires the default), and raises
-`max_tokens` above the budget. On other providers `xhigh` behaves like `high`.
+Anthropic models take effort natively via `output_config.effort` (including
+`xhigh` and `max`). Current Claude models (Fable 5, Opus 4.7/4.8, Sonnet 5)
+**reject** explicit extended-thinking budgets (`thinking: {type: enabled,
+budget_tokens: N}` returns a 400) and also reject `temperature`, so the skill
+never sends a thinking budget and relies on LiteLLM's `drop_params=True` to
+drop `temperature` where it is unsupported. Because thinking counts toward
+`max_tokens` on these models, the skill raises `max_tokens` to at least 16000
+whenever effort is set on an Anthropic model.
+
+Other providers go through LiteLLM's cross-provider `reasoning_effort`, which
+tops out at `high` - so `xhigh`/`max` behave like `high` there.
 
 Because `effort` semantics differ across providers, comparisons are cleanest
-*within* one provider (e.g. Opus 4.8 xhigh vs a newer Claude at xhigh). LiteLLM
-runs with `drop_params=True`, so a param a provider does not support is dropped
-rather than erroring.
+*within* one provider (e.g. Opus 4.8 xhigh vs a newer Claude at xhigh).
 
 ## Other LLM parameters
 

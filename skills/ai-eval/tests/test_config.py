@@ -15,6 +15,14 @@ def test_effort_maps_to_reasoning_effort():
 
 def test_all_effort_levels_are_mapped():
     assert set(config.EFFORT_LEVELS) == set(config.EFFORT_TO_REASONING)
+    assert set(config.EFFORT_LEVELS) == set(config.ANTHROPIC_EFFORT)
+
+
+def test_anthropic_effort_keeps_xhigh_and_max():
+    assert config.ANTHROPIC_EFFORT["xhigh"] == "xhigh"
+    assert config.ANTHROPIC_EFFORT["max"] == "max"
+    # cross-provider reasoning_effort tops out at high
+    assert config.EFFORT_TO_REASONING["xhigh"] == "high"
 
 
 def test_param_coercion():

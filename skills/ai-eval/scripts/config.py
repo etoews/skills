@@ -14,11 +14,11 @@ import os
 import re
 from dataclasses import dataclass, field
 
-# Portable effort levels, mapped to LiteLLM's cross-provider `reasoning_effort`.
-# "effort" is a Claude Code concept; LiteLLM normalises it across providers.
-# "xhigh" has no LiteLLM equivalent, so it maps to "high" plus a larger Anthropic
-# extended-thinking budget (applied in model.py). See references/providers.md.
-EFFORT_LEVELS = ("none", "minimal", "low", "medium", "high", "xhigh")
+# Portable effort levels. Anthropic models take these natively via
+# `output_config.effort` (current Claude models reject explicit thinking
+# budgets); other providers go through LiteLLM's cross-provider
+# `reasoning_effort`, which tops out at "high". See references/providers.md.
+EFFORT_LEVELS = ("none", "minimal", "low", "medium", "high", "xhigh", "max")
 EFFORT_TO_REASONING = {
     "none": None,
     "minimal": "minimal",
@@ -26,9 +26,20 @@ EFFORT_TO_REASONING = {
     "medium": "medium",
     "high": "high",
     "xhigh": "high",
+    "max": "high",
 }
-# Anthropic extended-thinking budget (tokens) used when effort is "xhigh".
-ANTHROPIC_XHIGH_BUDGET_TOKENS = 32_000
+ANTHROPIC_EFFORT = {
+    "none": None,
+    "minimal": "low",  # Anthropic's scale starts at "low"
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "xhigh": "xhigh",
+    "max": "max",
+}
+# Headroom floor when effort is on for an Anthropic model: thinking counts
+# toward max_tokens, so a small cap would truncate the answer mid-thought.
+ANTHROPIC_EFFORT_MIN_MAX_TOKENS = 16_000
 
 DEFAULT_JUDGE_MODEL = "anthropic/claude-sonnet-4-5"
 DEFAULT_COLLECTOR_ENDPOINT = "http://localhost:6006"

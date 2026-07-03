@@ -21,9 +21,13 @@ to change about prompting.
 
 1. **Model invocation: LiteLLM.** Provider-agnostic, so the same prompts can be
    run against Claude, GPT, Gemini, etc. `effort` maps per-provider (Anthropic:
-   extended-thinking `budget_tokens`; others: their nearest reasoning knob) via
-   LiteLLM's `reasoning_effort`. A `--param k=v` passthrough covers other LLM
-   parameters. Isolated in `model.py` so a provider is a small change.
+   `output_config.effort`, which natively supports xhigh/max; others: LiteLLM's
+   `reasoning_effort`, capped at high). A `--param k=v` passthrough covers other
+   LLM parameters. Isolated in `model.py` so a provider is a small change.
+   *(Amended 2026-07-04: the original design sent an explicit extended-thinking
+   `budget_tokens` for Anthropic xhigh; current Claude models (Fable 5, Opus
+   4.7/4.8, Sonnet 5) reject that with a 400 - discovered during the first real
+   run, exactly the kind of model-API drift this skill exists to surface.)*
 2. **Dataset format: YAML, one file per case in a directory.** Each file holds
    `input`, `expected` (a single ground-truth string), and optional `metadata`.
    The loader globs the directory (stable sort by filename) and upserts a

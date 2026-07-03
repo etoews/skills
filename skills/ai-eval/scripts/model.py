@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from config import ANTHROPIC_XHIGH_BUDGET_TOKENS, RunConfig
+from config import ANTHROPIC_EFFORT, ANTHROPIC_EFFORT_MIN_MAX_TOKENS, RunConfig
 
 
 def _expected_text(expected: Any) -> str:
@@ -47,18 +47,20 @@ def _make_litellm_task(cfg: RunConfig) -> Callable:
         kwargs: dict[str, Any] = dict(cfg.params)
         kwargs["max_tokens"] = cfg.max_tokens
         if cfg.temperature is not None:
+            # Current Anthropic models reject temperature; drop_params drops it there.
             kwargs["temperature"] = cfg.temperature
-        if cfg.reasoning_effort:
-            kwargs["reasoning_effort"] = cfg.reasoning_effort
 
-        # xhigh on Anthropic: use an explicit extended-thinking budget. Thinking
-        # requires the default temperature and max_tokens greater than the budget.
-        if cfg.effort == "xhigh" and cfg.model.startswith("anthropic"):
-            budget = ANTHROPIC_XHIGH_BUDGET_TOKENS
-            kwargs.pop("reasoning_effort", None)
-            kwargs.pop("temperature", None)
-            kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
-            kwargs["max_tokens"] = max(cfg.max_tokens, budget + 4096)
+        # Anthropic takes effort natively (incl. xhigh/max) via output_config.
+        # Explicit thinking budgets are rejected by current Claude models, so
+        # never send those. Other providers use LiteLLM's reasoning_effort.
+        if cfg.model.startswith("anthropic"):
+            effort = ANTHROPIC_EFFORT.get(cfg.effort)
+            if effort:
+                kwargs["output_config"] = {"effort": effort}
+                # Thinking counts toward max_tokens; give the answer headroom.
+                kwargs["max_tokens"] = max(cfg.max_tokens, ANTHROPIC_EFFORT_MIN_MAX_TOKENS)
+        elif cfg.reasoning_effort:
+            kwargs["reasoning_effort"] = cfg.reasoning_effort
 
         resp = litellm.completion(model=cfg.model, messages=messages, **kwargs)
         return (resp.choices[0].message.content or "").strip()

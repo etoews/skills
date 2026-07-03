@@ -37,24 +37,36 @@ def _patch_completion(monkeypatch):
     return captured
 
 
-def test_xhigh_anthropic_uses_thinking_budget(monkeypatch):
+def test_xhigh_anthropic_uses_output_config_effort(monkeypatch):
     captured = _patch_completion(monkeypatch)
     cfg = RunConfig(
-        dataset_dir="d", model="anthropic/claude-opus-4-8", effort="xhigh",
+        dataset_dir="d", model="anthropic/claude-fable-5", effort="xhigh",
         system_prompt="SYS", params={"top_p": 0.9}, max_tokens=1024, temperature=0.5,
     )
     out = model.make_task(cfg)({"question": "Q"}, metadata={})
     assert out == "MODEL OUTPUT"
-    assert captured["model"] == "anthropic/claude-opus-4-8"
+    assert captured["model"] == "anthropic/claude-fable-5"
     assert captured["messages"] == [
         {"role": "system", "content": "SYS"},
         {"role": "user", "content": "Q"},
     ]
-    assert captured["thinking"] == {"type": "enabled", "budget_tokens": 32000}
-    assert "reasoning_effort" not in captured  # superseded by explicit thinking budget
-    assert "temperature" not in captured  # thinking requires the default temperature
-    assert captured["max_tokens"] > 32000  # must exceed the budget
+    assert captured["output_config"] == {"effort": "xhigh"}
+    # Current Claude models reject explicit thinking budgets and reasoning_effort
+    # is redundant when effort goes through output_config.
+    assert "thinking" not in captured
+    assert "reasoning_effort" not in captured
+    assert captured["max_tokens"] >= 16000  # thinking counts toward max_tokens
+    assert captured["temperature"] == 0.5  # passed; litellm drop_params handles rejection
     assert captured["top_p"] == 0.9  # --param passthrough
+
+
+def test_anthropic_effort_none_sends_no_output_config(monkeypatch):
+    captured = _patch_completion(monkeypatch)
+    cfg = RunConfig(dataset_dir="d", model="anthropic/claude-fable-5", effort="none", max_tokens=1024)
+    model.make_task(cfg)({"question": "Q"})
+    assert "output_config" not in captured
+    assert "thinking" not in captured
+    assert captured["max_tokens"] == 1024  # no headroom bump without effort
 
 
 def test_high_non_anthropic_uses_reasoning_effort(monkeypatch):
