@@ -23,7 +23,11 @@ typing:
 That invokes the skill: Claude reads `SKILL.md` and drives the whole run for you.
 You supply three things (Claude asks for whatever is missing) - the **dataset**
 (prompts + ground truth), the **config under test** (model, effort, any params),
-and a **baseline** to compare against.
+and a **baseline** to compare against. For example:
+
+```
+/ai-eval evaluate claude-fable-5 at xhigh against ./my-prompts, baseline opus-4.8-xhigh
+```
 
 A typical session:
 
@@ -32,12 +36,11 @@ sequenceDiagram
     actor You
     participant Claude
     participant Phoenix as Local Phoenix
-    You->>Claude: /ai-eval evaluate claude-fable-5 at xhigh<br/>against ./my-prompts, baseline opus-4.8-xhigh
-    Claude->>Phoenix: start Phoenix (docker compose / phoenix serve) + uv sync
-    Note over Claude: no provider key? offer an --offline smoke test
-    Claude->>Phoenix: run_eval.py per config (baseline, then candidate)
-    Phoenix-->>Claude: per-case scores stored as experiments
-    Claude-->>You: per-metric means + Phoenix compare link
+    You->>Claude: /ai-eval
+    Claude->>Phoenix: start Phoenix
+    Claude->>Phoenix: run the eval per config
+    Phoenix-->>Claude: scores
+    Claude-->>You: per-metric means + compare link
 ```
 
 1. **You** type `/ai-eval` with (optionally) what to test and where your prompts
