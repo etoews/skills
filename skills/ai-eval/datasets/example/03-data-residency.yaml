@@ -1,0 +1,13 @@
+# `metadata.demo_quality: wrong` makes the offline stub return an unrelated
+# answer, so every metric scores low - the shape of a real regression.
+input: |
+  Which regions can I pin my Acme Cloud data to for residency, and can data
+  ever leave the region I choose?
+expected: |
+  Acme Cloud lets you pin data residency to one of three regions: US (us-east),
+  EU (eu-central), and Asia-Pacific (ap-southeast). Data pinned to a region,
+  including backups, stays within that region and is never replicated outside it.
+metadata:
+  category: compliance
+  difficulty: hard
+  demo_quality: wrong

@@ -1,0 +1,14 @@
+# One evaluation case: a prompt plus its known-good ("ground truth") answer.
+# `metadata.demo_quality` only affects --offline mode (it drives the stub answer
+# so the demo shows a score spread); real runs ignore it.
+input: |
+  A customer bought a laptop 10 days ago, opened it, and wants a cash refund.
+  What is Acme Cloud's return policy for opened electronics?
+expected: |
+  Opened electronics can be returned within 14 days of purchase for store credit
+  only, provided all accessories and original packaging are included. Acme Cloud
+  does not issue cash refunds on opened electronics.
+metadata:
+  category: policy
+  difficulty: easy
+  demo_quality: good

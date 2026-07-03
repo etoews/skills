@@ -1,0 +1,25 @@
+# Local Arize Phoenix for the ai-eval skill.
+#   docker compose up -d      # start Phoenix (UI + collector on :6006)
+#   docker compose down       # stop; add -v to also delete the data volume
+#
+# Phoenix is the eval harness only: it stores datasets, runs experiments, and
+# shows the compare UI. It never calls an LLM itself.
+services:
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"   # UI + OTLP HTTP collector (PHOENIX_COLLECTOR_ENDPOINT)
+      - "4317:4317"   # OTLP gRPC collector
+    environment:
+      # Persist datasets/experiments to the named volume across restarts.
+      - PHOENIX_WORKING_DIR=/mnt/data
+    volumes:
+      - phoenix_data:/mnt/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:6006/healthz').status==200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  phoenix_data:

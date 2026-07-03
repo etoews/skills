@@ -6,6 +6,7 @@ A personal collection of [Claude](https://claude.com/claude-code) skills.
 
 | Skill | Summary |
 |-------|---------|
+| [ai-eval](skills/ai-eval/) | Run a repeatable LLM evaluation in a local Docker Compose [Arize Phoenix](https://github.com/Arize-ai/phoenix) against your own prompts and ground-truth answers. Each run is a Phoenix experiment tagged with its model/effort/params, scored for correctness, relevance, and faithfulness, so a candidate can be compared against a baseline. Provider-agnostic via LiteLLM; runs offline (no API key) for a pipeline smoke test. |
 | [brainstorm-with-docs](skills/brainstorm-with-docs/) | Thin conductor that runs `superpowers:brainstorming`, then `grill-with-docs` against the committed spec (glossary, ADRs), then `superpowers:writing-plans`. Copies nothing from the upstream skills so their updates keep flowing. |
 | [security-review-gate](skills/security-review-gate/) | In-session gate that requires a `/security-review`, with approval recorded for the commit, before Claude runs `git push` or `git merge` into `main`. Opt-in per repo. |
 

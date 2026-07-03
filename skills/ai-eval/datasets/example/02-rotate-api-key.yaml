@@ -1,0 +1,15 @@
+# `metadata.demo_quality: partial` makes the offline stub return an incomplete
+# answer, so you can see correctness drop while faithfulness stays high.
+input: |
+  How do I rotate an API key in Acme Cloud without downtime for my running
+  services?
+expected: |
+  Rotate an Acme Cloud API key with zero downtime in three steps: (1) In the
+  console under Settings > API Keys, click "Add key" to create a second active
+  key. (2) Update your services to use the new key and deploy, so both keys are
+  briefly valid at once. (3) Once all traffic uses the new key, return to the
+  console and revoke the old key.
+metadata:
+  category: how-to
+  difficulty: medium
+  demo_quality: partial
