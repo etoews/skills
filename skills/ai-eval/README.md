@@ -6,26 +6,64 @@ experiment tagged with its model/effort/param configuration, so you can compare
 a candidate against a baseline on the metrics that matter: **correctness**,
 **relevance**, **faithfulness**.
 
-See [`SKILL.md`](SKILL.md) for setup and usage. This file covers how it works,
-the architecture, and its limits.
+This file covers how to use it from Claude Code, how it works, the architecture,
+and its limits. For the raw commands, see [`SKILL.md`](SKILL.md).
+
+## Using it from Claude Code
+
+First install the skill where Claude Code discovers skills - symlink or copy the
+`ai-eval` directory into `~/.claude/skills/` or `<project>/.claude/skills/` (see
+the [repo README](../../README.md)). Then, in a Claude Code session, run it by
+typing:
+
+```
+/ai-eval
+```
+
+That invokes the skill: Claude reads `SKILL.md` and drives the whole run for you.
+You supply three things (Claude asks for whatever is missing) - the **dataset**
+(prompts + ground truth), the **config under test** (model, effort, any params),
+and a **baseline** to compare against.
+
+A typical session:
+
+```mermaid
+sequenceDiagram
+    actor You
+    participant Claude
+    participant Phoenix as Local Phoenix
+    You->>Claude: /ai-eval evaluate claude-fable-5 at xhigh<br/>against ./my-prompts, baseline opus-4.8-xhigh
+    Claude->>Phoenix: start Phoenix (docker compose / phoenix serve) + uv sync
+    Note over Claude: no provider key? offer an --offline smoke test
+    Claude->>Phoenix: run_eval.py per config (baseline, then candidate)
+    Phoenix-->>Claude: per-case scores stored as experiments
+    Claude-->>You: per-metric means + Phoenix compare link
+```
+
+1. **You** type `/ai-eval` with (optionally) what to test and where your prompts
+   live.
+2. **Claude** starts local Phoenix, prepares the env, and checks for a provider
+   key - offering an `--offline` pipeline smoke test if none is set.
+3. **Claude** reads your one-YAML-file-per-case dataset (or helps you author
+   cases from prompts you paste), then runs the experiment for each config.
+4. **Claude** reports the per-metric means (correctness / relevance /
+   faithfulness) and links the Phoenix compare view, where you read each case's
+   output and the judge's explanation.
+
+To add a comparison later, run `/ai-eval` again with a new config on the same
+dataset - Phoenix keeps every run as a comparable experiment.
 
 ## Flow
 
-```
-YAML cases (input + expected)
-        │  dataset.py
-        ▼
-Phoenix dataset  (inputs = questions, outputs = ground truth)
-        │
-        ▼
-run_experiment(task, evaluators)          ── Phoenix (Docker) orchestrates + stores
-        │                     │
-   model.py               evaluators.py
-   (model under test,     (correctness / relevance / faithfulness,
-    LiteLLM or stub)       LLM-as-judge or offline heuristic)
-        │
-        ▼
-per-metric summary + Phoenix compare UI (baseline vs candidate)
+```mermaid
+flowchart TD
+    A["YAML cases<br/>(input + expected)"] -->|"dataset.py"| B["Phoenix dataset<br/>inputs = questions<br/>outputs = ground truth"]
+    B --> C{{"run_experiment<br/>Phoenix orchestrates + stores"}}
+    C -->|"1. run task"| M["model.py<br/>model under test<br/>(LiteLLM or offline stub)"]
+    M -->|"answer"| C
+    C -->|"2. grade"| E["evaluators.py<br/>correctness / relevance / faithfulness<br/>(LLM-as-judge or offline heuristic)"]
+    E -->|"scores"| C
+    C --> R["Per-metric summary +<br/>Phoenix compare UI<br/>(baseline vs candidate)"]
 ```
 
 Phoenix is the harness only - it never calls an LLM. The skill supplies the
