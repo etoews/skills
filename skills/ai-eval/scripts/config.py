@@ -65,6 +65,17 @@ class RunConfig:
         """LiteLLM `reasoning_effort` value for this effort level (or None)."""
         return EFFORT_TO_REASONING.get(self.effort)
 
+    @property
+    def description(self) -> str:
+        """One-line experiment description shown in the Phoenix experiments table."""
+        bits = [f"{self.model} @ effort={self.effort}"]
+        if self.temperature is not None:
+            bits.append(f"temp={self.temperature}")
+        bits.extend(f"{k}={v}" for k, v in self.params.items())
+        bits.append("offline stub (scores not meaningful)" if self.offline
+                    else f"judge={self.judge_model}")
+        return ", ".join(bits)
+
 
 def _slug(text: str) -> str:
     """Filesystem/label-safe slug: lowercase, non-alphanumerics -> '-'."""

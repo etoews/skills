@@ -59,3 +59,20 @@ def test_explicit_names_win():
 def test_offline_flag():
     assert _parse("--dataset", "d", "--model", "m", "--offline").offline is True
     assert _parse("--dataset", "d", "--model", "m").offline is False
+
+
+def test_description_real_run():
+    cfg = _parse(
+        "--dataset", "d", "--model", "anthropic/claude-fable-5", "--effort", "xhigh",
+        "--temperature", "0.2", "--param", "top_p=0.9",
+    )
+    assert cfg.description == (
+        "anthropic/claude-fable-5 @ effort=xhigh, temp=0.2, top_p=0.9, "
+        "judge=anthropic/claude-sonnet-4-5"
+    )
+
+
+def test_description_offline_flags_stub():
+    cfg = _parse("--dataset", "d", "--model", "m", "--offline")
+    assert "offline stub" in cfg.description
+    assert "judge=" not in cfg.description

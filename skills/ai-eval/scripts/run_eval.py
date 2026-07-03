@@ -13,6 +13,7 @@ no API key.
 
 from __future__ import annotations
 
+import os
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -26,6 +27,22 @@ from config import parse_args  # noqa: E402
 from dataset import load_cases, sync_dataset  # noqa: E402
 from evaluators import make_evaluators  # noqa: E402
 from model import make_task  # noqa: E402
+
+
+def _setup_tracing(cfg) -> None:
+    """Instrument LiteLLM with OpenInference, exporting to Phoenix.
+
+    This is what fills the experiment's "total tokens" and "total cost"
+    columns: Phoenix aggregates them from LLM spans (token counts + model
+    name) nested under each task/evaluator run. Cost additionally needs the
+    model to be in Phoenix's model-price table (Settings > Models).
+    """
+    os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = cfg.collector_endpoint
+    from openinference.instrumentation.litellm import LiteLLMInstrumentor
+    from phoenix.otel import register
+
+    tracer_provider = register(verbose=False)
+    LiteLLMInstrumentor().instrument(tracer_provider=tracer_provider)
 
 
 def _get(obj: Any, key: str, default=None):
@@ -84,6 +101,9 @@ def main(argv=None) -> int:
     load_dotenv()
     cfg = parse_args(argv)
 
+    if not cfg.offline:
+        _setup_tracing(cfg)  # token/cost tracking in Phoenix; stubs make no LLM calls
+
     cases = load_cases(cfg.dataset_dir)
     print(f"Loaded {len(cases)} case(s) from {cfg.dataset_dir}")
 
@@ -105,6 +125,7 @@ def main(argv=None) -> int:
         task=task,
         evaluators=evaluators,
         experiment_name=cfg.experiment_name,
+        experiment_description=cfg.description,
         experiment_metadata={
             "model": cfg.model,
             "effort": cfg.effort,

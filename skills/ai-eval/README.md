@@ -85,7 +85,10 @@ dataset, the task (thing under test), and the graders.
 - **`scripts/evaluators.py`** - three `create_evaluator(kind="LLM")` judges
   backed by a `phoenix.evals.LLM` (real) or token-overlap heuristics (offline).
 - **`scripts/run_eval.py`** - the entrypoint that wires it together and prints
-  the summary.
+  the summary. On real runs it instruments LiteLLM with OpenInference so every
+  model and judge call emits token counts to Phoenix - that is what fills the
+  experiment table's "total tokens" and "total cost" columns (cost also needs
+  the model in Phoenix's price table, under Settings > Models).
 
 ## Design decisions
 
@@ -104,6 +107,10 @@ dataset, the task (thing under test), and the graders.
 
 - **Offline scores are not meaningful.** They exist to prove plumbing and keep
   tests hermetic. Real evaluation needs a provider key and no `--offline`.
+  Offline runs also show no tokens or cost - the stubs make no LLM calls.
+- **LLM-as-judge scores vary run to run.** The same model on the same prompts
+  can flip a borderline case between runs. Judge each metric drop by reading
+  the explanation in Phoenix, and prefer more cases over rerunning few.
 - **Cross-provider effort is approximate.** `effort` maps differently per
   provider; compare within a provider for the cleanest signal.
 - **LLM-as-judge is noisy.** Treat a metric drop as a lead to inspect in the
