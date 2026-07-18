@@ -7,9 +7,10 @@ For the full design rationale, see
 Python work on this skill follows
 [../../docs/standards/python.md](../../docs/standards/python.md).
 
-M0 to M7 are complete: the skill runs real Phoenix experiments end to end,
-validated against a real Fable 5 eval. Carry-forward notes live under the most
-recently completed milestone.
+M0 to M8 are complete: the skill runs real Phoenix experiments end to end
+(validated against a real Fable 5 eval) and conforms to the repo Python standard
+(ruff, ty, and a clean import model with no path shims). Carry-forward notes live
+under the most recently completed milestone.
 
 ## Contents
 
@@ -23,8 +24,8 @@ recently completed milestone.
 | [M5: Tracing, tokens, cost](#m5-tracing-tokens-cost) | S | ✅ Complete |
 | [M6: Tests](#m6-tests) | M | ✅ Complete |
 | [M7: Real-run validation](#m7-real-run-validation) | S | ✅ Complete |
-| [M8: Conform to the Python standard](#m8-conform-to-the-python-standard) | M | ⬜ Next |
-| [M9: Discover what's new in a model and what to change about prompting](#m9-discover-whats-new-in-a-model-and-what-to-change-about-prompting) | S | ⬜ Not started |
+| [M8: Conform to the Python standard](#m8-conform-to-the-python-standard) | M | ✅ Complete |
+| [M9: Discover what's new in a model and what to change about prompting](#m9-discover-whats-new-in-a-model-and-what-to-change-about-prompting) | S | ⬜ Next |
 | [M10: CI](#m10-ci) | S | ⬜ Not started |
 | [M11: Richer evaluation](#m11-richer-evaluation) | M | ⬜ Deferred |
 | [M12: Provider breadth](#m12-provider-breadth) | S | ⬜ Deferred |
@@ -34,7 +35,7 @@ recently completed milestone.
 **Critical path:** M0 to M1 is sequential. M2 and M3 run in parallel after M1.
 M4 needs M1 to M3. M5 and M6 follow M4. M7 needs a real provider key. Among the
 future milestones, M10 (CI) depends on M8, which adds ruff and ty; the rest are
-independently orderable. M8 comes first.
+independently orderable. M8 is complete, so M9 and M10 are both unblocked.
 
 ---
 
@@ -183,16 +184,6 @@ independently orderable. M8 comes first.
 - [x] A real experiment on `datasets/example` records per-metric means and
   tokens/cost in Phoenix.
 
-### Carry-forward
-
-- **M8**: `run_eval.py` imports the flat `scripts/` modules via
-  `sys.path.insert(...)` plus `# noqa: E402`, and `tests/conftest.py` repeats the
-  path shim. This is the first thing that will fight ruff and ty; resolve the
-  import model before turning either on.
-- **M12**: the cross-provider effort mapping is approximate (non-Anthropic
-  providers cap at `high`). Compare within a provider for the cleanest signal
-  until a second provider is validated.
-
 ---
 
 ## M8: Conform to the Python standard
@@ -200,21 +191,35 @@ independently orderable. M8 comes first.
 Bring the skill up to [../../docs/standards/python.md](../../docs/standards/python.md).
 
 **Deliverables**
-- [ ] Add ruff (config + `--dev` dep). Adopt the standard rule selection
+- [x] Add ruff (config + `--dev` dep). Adopt the standard rule selection
   (`E`, `F`, `I`, `UP`, `B`, `SIM`, `RUF`) and the tests per-file ignores
   (`S101`, `D`). `ruff check` and `ruff format --check` run clean.
-- [ ] Resolve the import model so the `sys.path.insert` hack and every
-  `# noqa: E402` disappear (make `scripts/` a proper importable package, or move
-  shared modules somewhere ruff and ty accept without a path shim).
-- [ ] Add ty (config + `--dev` dep). Complete the type coverage: full signatures
+- [x] Resolve the import model so the `sys.path.insert` hack and every
+  `# noqa: E402` disappear. Resolved with pytest `pythonpath = ["scripts"]` (which
+  retired `tests/conftest.py`) plus `[tool.ty.environment] root = ["scripts"]`;
+  the in-place entry point relies on Python's automatic `sys.path[0]`, so the
+  flat `scripts/` layout the standard prescribes is kept.
+- [x] Add ty (config + `--dev` dep). Complete the type coverage: full signatures
   on every function in `scripts/` and `tests/` (including `-> None`), replacing
   loose `Any`/untyped parameters where practical. `ty check` runs clean.
-- [ ] Tighten `[tool.pytest.ini_options]` to the standard
+- [x] Tighten `[tool.pytest.ini_options]` to the standard
   `addopts = "-ra --strict-markers --strict-config"`.
 
 **Hands-on artefact**
-- [ ] `uv run ruff check`, `uv run ruff format --check`, and `uv run ty check`
+- [x] `uv run ruff check`, `uv run ruff format --check`, and `uv run ty check`
   all pass, and `bash tests/run.sh` still passes.
+
+### Carry-forward
+
+- **M10**: CI is now unblocked (ruff and ty are in place). The GitHub Actions
+  workflow runs `uv sync --locked`, `ruff check`, `ruff format --check`,
+  `ty check`, and the unit suite.
+- **M12**: the cross-provider effort mapping is approximate (non-Anthropic
+  providers cap at `high`). Compare within a provider for the cleanest signal
+  until a second provider is validated.
+- ty is pre-1.0 (pinned `>=0.0.60`); it ran clean here with no mypy fallback
+  needed. External Phoenix/LiteLLM objects (`client`, `judge`, dataset, evaluator
+  list) are annotated `Any` at the boundary by design.
 
 ---
 

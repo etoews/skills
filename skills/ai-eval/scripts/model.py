@@ -12,7 +12,8 @@ the stub's quality is keyed off each case's `metadata.demo_quality`
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from config import ANTHROPIC_EFFORT, ANTHROPIC_EFFORT_MIN_MAX_TOKENS, RunConfig
 
@@ -29,16 +30,16 @@ def _question_text(input: Any) -> str:
     return str(input or "").strip()
 
 
-def make_task(cfg: RunConfig) -> Callable:
+def make_task(cfg: RunConfig) -> Callable[..., str]:
     return _make_offline_task() if cfg.offline else _make_litellm_task(cfg)
 
 
-def _make_litellm_task(cfg: RunConfig) -> Callable:
+def _make_litellm_task(cfg: RunConfig) -> Callable[..., str]:
     import litellm
 
     litellm.drop_params = True  # drop params a given provider doesn't support
 
-    def task(input: Any, metadata: dict | None = None) -> str:
+    def task(input: Any, metadata: dict[str, Any] | None = None) -> str:
         messages: list[dict[str, str]] = []
         if cfg.system_prompt:
             messages.append({"role": "system", "content": cfg.system_prompt})
@@ -58,7 +59,9 @@ def _make_litellm_task(cfg: RunConfig) -> Callable:
             if effort:
                 kwargs["output_config"] = {"effort": effort}
                 # Thinking counts toward max_tokens; give the answer headroom.
-                kwargs["max_tokens"] = max(cfg.max_tokens, ANTHROPIC_EFFORT_MIN_MAX_TOKENS)
+                kwargs["max_tokens"] = max(
+                    cfg.max_tokens, ANTHROPIC_EFFORT_MIN_MAX_TOKENS
+                )
         elif cfg.reasoning_effort:
             kwargs["reasoning_effort"] = cfg.reasoning_effort
 
@@ -68,8 +71,10 @@ def _make_litellm_task(cfg: RunConfig) -> Callable:
     return task
 
 
-def _make_offline_task() -> Callable:
-    def task(input: Any, expected: Any = None, metadata: dict | None = None) -> str:
+def _make_offline_task() -> Callable[..., str]:
+    def task(
+        input: Any, expected: Any = None, metadata: dict[str, Any] | None = None
+    ) -> str:
         quality = str((metadata or {}).get("demo_quality", "good")).lower()
         reference = _expected_text(expected)
         if quality == "wrong":

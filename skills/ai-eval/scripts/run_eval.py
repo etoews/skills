@@ -14,22 +14,20 @@ no API key.
 from __future__ import annotations
 
 import os
-import sys
 from collections import defaultdict
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from dotenv import load_dotenv
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Run in place: `uv run python scripts/run_eval.py` puts scripts/ on sys.path[0],
+# so the flat sibling modules import directly (no path shim needed).
+from config import RunConfig, parse_args
+from dataset import load_cases, sync_dataset
+from evaluators import make_evaluators
+from model import make_task
 
-from config import parse_args  # noqa: E402
-from dataset import load_cases, sync_dataset  # noqa: E402
-from evaluators import make_evaluators  # noqa: E402
-from model import make_task  # noqa: E402
 
-
-def _setup_tracing(cfg) -> None:
+def _setup_tracing(cfg: RunConfig) -> None:
     """Instrument LiteLLM with OpenInference, exporting to Phoenix.
 
     This is what fills the experiment's "total tokens" and "total cost"
@@ -45,7 +43,7 @@ def _setup_tracing(cfg) -> None:
     LiteLLMInstrumentor().instrument(tracer_provider=tracer_provider)
 
 
-def _get(obj: Any, key: str, default=None):
+def _get(obj: Any, key: str, default: Any = None) -> Any:
     """Attribute-or-key access, tolerant of dataclass vs dict result shapes."""
     if obj is None:
         return default
@@ -54,7 +52,7 @@ def _get(obj: Any, key: str, default=None):
     return getattr(obj, key, default)
 
 
-def _extract_score(result: Any) -> Optional[float]:
+def _extract_score(result: Any) -> float | None:
     score = _get(result, "score")
     try:
         return float(score) if score is not None else None
@@ -62,7 +60,7 @@ def _extract_score(result: Any) -> Optional[float]:
         return None
 
 
-def _print_summary(ran: Any, cfg, n_cases: int) -> None:
+def _print_summary(ran: Any, cfg: RunConfig, n_cases: int) -> None:
     eval_runs = _get(ran, "evaluation_runs", []) or []
     scores: dict[str, list[float]] = defaultdict(list)
     errors: dict[str, int] = defaultdict(int)
@@ -80,8 +78,10 @@ def _print_summary(ran: Any, cfg, n_cases: int) -> None:
     print("\n=== ai-eval summary ===")
     print(f"experiment : {cfg.experiment_name}")
     print(f"dataset    : {cfg.dataset_name}  ({n_cases} cases)")
-    print(f"model      : {cfg.model}   effort: {cfg.effort}"
-          + ("   [OFFLINE STUB - scores not meaningful]" if cfg.offline else ""))
+    print(
+        f"model      : {cfg.model}   effort: {cfg.effort}"
+        + ("   [OFFLINE STUB - scores not meaningful]" if cfg.offline else "")
+    )
     if not scores:
         print("  (no evaluator scores recorded)")
     for name in sorted(scores):
@@ -91,13 +91,15 @@ def _print_summary(ran: Any, cfg, n_cases: int) -> None:
         print(f"  {name:<14} mean={mean:.3f}  (n={len(vals)}){note}")
 
     exp_id = _get(ran, "experiment_id")
-    print(f"\nCompare experiments in Phoenix: {cfg.collector_endpoint}"
-          "  (open your dataset's Experiments tab)")
+    print(
+        f"\nCompare experiments in Phoenix: {cfg.collector_endpoint}"
+        "  (open your dataset's Experiments tab)"
+    )
     if exp_id:
         print(f"experiment_id: {exp_id}")
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     load_dotenv()
     cfg = parse_args(argv)
 
@@ -110,6 +112,8 @@ def main(argv=None) -> int:
     from phoenix.client import Client
 
     client = Client(base_url=cfg.collector_endpoint)
+    # parse_args/build_config always resolve dataset_name to a concrete string.
+    assert cfg.dataset_name is not None
     dataset = sync_dataset(client, cfg.dataset_name, cases)
     print(f"Dataset ready: {cfg.dataset_name!r}")
 
@@ -118,7 +122,11 @@ def main(argv=None) -> int:
 
     from phoenix.client.experiments import run_experiment
 
-    mode = "OFFLINE stub model + judge" if cfg.offline else f"{cfg.model} / effort={cfg.effort}"
+    mode = (
+        "OFFLINE stub model + judge"
+        if cfg.offline
+        else f"{cfg.model} / effort={cfg.effort}"
+    )
     print(f"Running experiment {cfg.experiment_name!r}  [{mode}] ...")
     ran = run_experiment(
         dataset=dataset,

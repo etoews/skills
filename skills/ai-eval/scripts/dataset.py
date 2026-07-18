@@ -19,6 +19,7 @@ from __future__ import annotations
 import glob
 import os
 from dataclasses import dataclass, field
+from typing import Any
 
 import yaml
 
@@ -28,7 +29,7 @@ class Case:
     name: str  # filename stem, used as a stable case id
     input: str  # the prompt / question
     expected: str  # the ground-truth answer
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 def load_cases(dataset_dir: str) -> list[Case]:
@@ -49,7 +50,9 @@ def load_cases(dataset_dir: str) -> list[Case]:
         with open(path, encoding="utf-8") as f:
             doc = yaml.safe_load(f)
         if not isinstance(doc, dict):
-            raise ValueError(f"{path}: expected a YAML mapping, got {type(doc).__name__}")
+            raise ValueError(
+                f"{path}: expected a YAML mapping, got {type(doc).__name__}"
+            )
         missing = [k for k in ("input", "expected") if not doc.get(k)]
         if missing:
             raise ValueError(f"{path}: missing required key(s): {', '.join(missing)}")
@@ -64,8 +67,11 @@ def load_cases(dataset_dir: str) -> list[Case]:
     return cases
 
 
-def sync_dataset(client, name: str, cases: list[Case]):
+def sync_dataset(client: Any, name: str, cases: list[Case]) -> Any:
     """Get-or-create a Phoenix dataset named `name` from `cases`.
+
+    `client` is a `phoenix.client.Client` and the return is a Phoenix Dataset;
+    both are external types annotated `Any` at this boundary.
 
     Reuses an existing dataset with the same name so repeated runs land as
     comparable experiments on the same dataset. To evaluate a changed set of

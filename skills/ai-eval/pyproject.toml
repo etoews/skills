@@ -18,7 +18,27 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "ruff>=0.15.22",
+    "ty>=0.0.60",
 ]
+
+[tool.ruff]
+# config, dataset, model, evaluators live in scripts/; tests import them.
+# Tell isort they are first-party so imports group correctly.
+src = ["scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "D"]  # pytest uses asserts; tests need no docstrings
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+# Put scripts/ on sys.path so tests `import config` etc. without a path shim.
+pythonpath = ["scripts"]
+
+[tool.ty.environment]
+# Resolve the flat scripts/ modules as first-party (config, dataset, ...).
+root = ["scripts"]

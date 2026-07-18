@@ -19,15 +19,16 @@ the pipeline runs with no API key; heuristic scores are illustrative, not real.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any
 
 from phoenix.client.experiments import create_evaluator
 
 from config import RunConfig
 
-
 # --- text helpers -----------------------------------------------------------
+
 
 def _field(value: Any, key: str) -> str:
     if isinstance(value, dict):
@@ -64,6 +65,7 @@ def _reference_precision(answer: str, reference: str, question: str) -> float:
 
 
 # --- judge prompts ----------------------------------------------------------
+
 
 def _correctness_prompt(question: str, answer: str, reference: str) -> str:
     return (
@@ -102,6 +104,7 @@ def _faithfulness_prompt(question: str, answer: str, reference: str) -> str:
 
 # --- evaluator assembly -----------------------------------------------------
 
+
 @dataclass
 class _MetricSpec:
     name: str
@@ -113,12 +116,20 @@ class _MetricSpec:
 
 _SPECS = [
     _MetricSpec("correctness", "correct", "incorrect", _correctness_prompt, _jaccard),
-    _MetricSpec("relevance", "relevant", "irrelevant", _relevance_prompt, _question_coverage),
-    _MetricSpec("faithfulness", "faithful", "unfaithful", _faithfulness_prompt, _reference_precision),
+    _MetricSpec(
+        "relevance", "relevant", "irrelevant", _relevance_prompt, _question_coverage
+    ),
+    _MetricSpec(
+        "faithfulness",
+        "faithful",
+        "unfaithful",
+        _faithfulness_prompt,
+        _reference_precision,
+    ),
 ]
 
 
-def _schema(positive: str, negative: str) -> dict:
+def _schema(positive: str, negative: str) -> dict[str, Any]:
     return {
         "type": "object",
         "properties": {
@@ -137,8 +148,10 @@ def _split_judge_model(judge_model: str) -> tuple[str, str]:
     return "anthropic", judge_model
 
 
-def _build_eval_fn(spec: _MetricSpec, judge, offline: bool) -> Callable:
-    def _eval(input: Any, output: Any, expected: Any):
+def _build_eval_fn(
+    spec: _MetricSpec, judge: Any, offline: bool
+) -> Callable[..., tuple[float, str, str]]:
+    def _eval(input: Any, output: Any, expected: Any) -> tuple[float, str, str]:
         question = _field(input, "question")
         answer = output if isinstance(output, str) else _field(output, "answer")
         reference = _field(expected, "answer")
@@ -160,7 +173,7 @@ def _build_eval_fn(spec: _MetricSpec, judge, offline: bool) -> Callable:
     return _eval
 
 
-def make_evaluators(cfg: RunConfig) -> list:
+def make_evaluators(cfg: RunConfig) -> list[Any]:
     judge = None
     if not cfg.offline:
         from phoenix.evals import LLM
@@ -168,7 +181,7 @@ def make_evaluators(cfg: RunConfig) -> list:
         provider, model = _split_judge_model(cfg.judge_model)
         judge = LLM(provider=provider, model=model, client="litellm")
 
-    evaluators = []
+    evaluators: list[Any] = []
     for spec in _SPECS:
         fn = _build_eval_fn(spec, judge, cfg.offline)
         evaluators.append(create_evaluator(kind="LLM", name=spec.name)(fn))
