@@ -25,7 +25,14 @@ skills/
     SKILL.md        # frontmatter + instructions
     references/     # optional supporting docs
     scripts/        # optional helper scripts
+.claude/skills/
+  sync/             # repo-management skill, not distributed
 ```
+
+`skills/` holds the skills this repo publishes. `.claude/skills/` holds skills
+that only manage this repo: `/sync` keeps the repo, its remote, and the
+installed symlinks in step, and its `scripts/status.sh` is a read-only audit of
+that state.
 
 ## Using these skills
 
@@ -34,6 +41,10 @@ discovers skills:
 
 - `~/.claude/skills/`: available in every project
 - `<project>/.claude/skills/`: scoped to a single project
+
+These skills are installed with symlinks pointing at this working tree, so an
+edit here is live in every project at once, and whichever branch is checked out
+here is the one every project runs. Run `/sync` to check and repair that state.
 
 ## Adding a skill
 
