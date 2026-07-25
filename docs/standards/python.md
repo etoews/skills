@@ -1,16 +1,16 @@
 # Python standards
 
 The Python development standard for this repo. Distilled from the
-[etoews/python](https://github.com/etoews/python) reference notes
-([`MAC.md`](https://github.com/etoews/python/blob/HEAD/MAC.md) and
-[`PROJECT.md`](https://github.com/etoews/python/blob/HEAD/PROJECT.md)) and
+[etoews/python-standards](https://github.com/etoews/python-standards) reference notes
+([`MAC.md`](https://github.com/etoews/python-standards/blob/HEAD/MAC.md) and
+[`PROJECT.md`](https://github.com/etoews/python-standards/blob/HEAD/PROJECT.md)) and
 narrowed to what Python work in *this* repo actually needs.
 
 This repo is a collection of Claude skills. The only Python in it today is the
 [`ai-eval`](../../skills/ai-eval/) skill: a uv-managed project with `scripts/`,
 `tests/`, `pyproject.toml`, and a committed `uv.lock`. Follow this file for any
 Python work here. For the exhaustive per-project playbook and one-time machine
-setup, read the [etoews/python](https://github.com/etoews/python) reference.
+setup, read the [etoews/python-standards](https://github.com/etoews/python-standards) reference.
 
 ## Stack
 

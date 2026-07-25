@@ -12,4 +12,4 @@ That includes reading, writing, reviewing, or running Python; editing a
 
 It is the distilled Python standard for this repo (stack: uv, ruff, pytest, ty,
 stdlib logging) and links back to the full
-[etoews/python](https://github.com/etoews/python) reference for depth.
+[etoews/python-standards](https://github.com/etoews/python-standards) reference for depth.
