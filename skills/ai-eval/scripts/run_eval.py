@@ -27,6 +27,20 @@ from evaluators import make_evaluators
 from model import make_task
 
 
+def _use_os_trust_store() -> None:
+    """Verify TLS against the OS trust store (macOS keychain, Windows store).
+
+    Python 3.13+ applies strict X.509 checks that reject some corporate
+    TLS-inspection CAs (e.g. Netskope's, which lacks a key-usage extension)
+    even when SSL_CERT_FILE trusts them. truststore delegates verification
+    to the OS, which still checks chain, expiry, and hostname. Must run
+    before litellm or any HTTP client builds an SSL context.
+    """
+    import truststore
+
+    truststore.inject_into_ssl()
+
+
 def _setup_tracing(cfg: RunConfig) -> None:
     """Instrument LiteLLM with OpenInference, exporting to Phoenix.
 
@@ -100,6 +114,7 @@ def _print_summary(ran: Any, cfg: RunConfig, n_cases: int) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _use_os_trust_store()
     load_dotenv()
     cfg = parse_args(argv)
 

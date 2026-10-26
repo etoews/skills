@@ -14,6 +14,17 @@ Put keys in a `.env` file in the skill directory (git-ignored) or export them;
 `run_eval.py` loads `.env` automatically. The same applies to `--judge-model`
 (default `anthropic/claude-fable-5-1`).
 
+## TLS and corporate proxies
+
+`run_eval.py` verifies provider TLS against the OS trust store (macOS
+keychain, Windows certificate store) via
+[truststore](https://pypi.org/project/truststore/), not Python's bundled CAs.
+On a network that re-signs TLS (Netskope, Zscaler), Python 3.13+'s strict
+X.509 checks otherwise fail every call with `CERTIFICATE_VERIFY_FAILED: CA cert
+does not include key usage extension`, even when `SSL_CERT_FILE` trusts the
+proxy's CA. The OS still checks chain, expiry, and hostname; nothing is
+disabled.
+
 ## Effort
 
 `--effort` is a portable knob with a per-provider mapping:

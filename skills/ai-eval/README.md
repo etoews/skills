@@ -85,7 +85,9 @@ dataset, the task (thing under test), and the graders.
 - **`scripts/evaluators.py`** - three `create_evaluator(kind="LLM")` judges
   backed by a `phoenix.evals.LLM` (real) or token-overlap heuristics (offline).
 - **`scripts/run_eval.py`** - the entrypoint that wires it together and prints
-  the summary. On real runs it instruments LiteLLM with OpenInference so every
+  the summary. It first switches TLS verification to the OS trust store so
+  corporate TLS-inspection proxies work on Python 3.13+ (see
+  `references/providers.md`). On real runs it instruments LiteLLM with OpenInference so every
   model and judge call emits token counts to Phoenix - that is what fills the
   experiment table's "total tokens" and "total cost" columns (cost also needs
   the model in Phoenix's price table, under Settings > Models).
