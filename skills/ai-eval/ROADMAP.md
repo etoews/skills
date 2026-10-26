@@ -45,8 +45,8 @@ independently orderable. M8 is complete, so M9 and M10 are both unblocked.
 - [x] Skill directory with `SKILL.md` (when-to-use + quickstart) and `README.md`
   (architecture, data flow, limits).
 - [x] uv-managed project: `pyproject.toml`, committed `uv.lock`,
-  `.python-version` pinned to the Phoenix client/evals / litellm support window
-  (`>=3.11,<3.13`).
+  `.python-version` pinned to 3.14, inside the Phoenix client/evals / litellm
+  support window (`>=3.11,<3.15`).
 - [x] `compose.yaml` for local Phoenix (`arizephoenix/phoenix:latest`, UI +
   collector on `:6006`, gRPC on `:4317`, data in a named volume).
 - [x] Docker-free fallback documented: `uvx --from arize-phoenix phoenix serve`

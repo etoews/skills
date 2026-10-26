@@ -64,8 +64,8 @@ Single source of truth for metadata, deps, and tool config.
   there).
 - **`requires-python`** matches the project's real support window. Prefer the
   current default (3.14) for new work, but a heavy-dependency project may need a
-  narrower range: `ai-eval` pins `>=3.11,<3.13` for the Phoenix libraries and
-  litellm. Keep it as tight as the deps demand and no tighter.
+  narrower range: `ai-eval` allows `>=3.11,<3.15` (the Phoenix libraries need
+  3.11+) and develops on 3.14. Keep it as tight as the deps demand and no tighter.
 - Tool config (`[tool.ruff]`, `[tool.pytest.ini_options]`, `[tool.ty]`) lives
   here rather than in scattered dotfiles.
 
