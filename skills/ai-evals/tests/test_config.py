@@ -113,3 +113,25 @@ def test_description_offline_flags_stub() -> None:
     cfg = _parse("--dataset", "d", "--model", "m", "--offline")
     assert "offline stub" in cfg.description
     assert "judge=" not in cfg.description
+
+
+def test_judge_files_and_repetitions_parse() -> None:
+    cfg = _parse(
+        "--dataset", "d", "--model", "m",
+        "--judge-file", "a.yaml", "--judge-file", "b.yaml",
+        "--repetitions", "3",
+    )  # fmt: skip
+
+    assert cfg.judge_files == ["a.yaml", "b.yaml"]
+    assert cfg.repetitions == 3
+
+
+def test_defaults_to_one_repetition_and_no_judge_files() -> None:
+    cfg = _parse("--dataset", "d", "--model", "m")
+
+    assert (cfg.judge_files, cfg.repetitions) == ([], 1)
+
+
+def test_repetitions_below_one_raise() -> None:
+    with pytest.raises(ValueError, match="--repetitions"):
+        _parse("--dataset", "d", "--model", "m", "--repetitions", "0")

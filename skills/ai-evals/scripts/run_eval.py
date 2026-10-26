@@ -91,7 +91,10 @@ def _print_summary(ran: Any, cfg: RunConfig, n_cases: int) -> None:
 
     print("\n=== ai-evals summary ===")
     print(f"experiment : {cfg.experiment_name}")
-    print(f"dataset    : {cfg.dataset_name}  ({n_cases} cases)")
+    print(
+        f"dataset    : {cfg.dataset_name}  ({n_cases} cases"
+        f" x {cfg.repetitions} repetition(s))"
+    )
     print(
         f"model      : {cfg.model}   effort: {cfg.effort}"
         + ("   [OFFLINE STUB - scores not meaningful]" if cfg.offline else "")
@@ -155,8 +158,12 @@ def main(argv: list[str] | None = None) -> int:
             "temperature": cfg.temperature,
             "offline": cfg.offline,
             "judge_model": None if cfg.offline else cfg.judge_model,
+            "system_prompt": cfg.system_prompt,
+            "judges": [os.path.basename(p) for p in cfg.judge_files],
+            "repetitions": cfg.repetitions,
             **{f"param.{k}": v for k, v in cfg.params.items()},
         },
+        repetitions=cfg.repetitions,
         print_summary=True,
         client=client,
     )

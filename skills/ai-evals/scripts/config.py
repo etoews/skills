@@ -62,6 +62,8 @@ class RunConfig:
     dataset_name: str | None = None
     collector_endpoint: str = DEFAULT_COLLECTOR_ENDPOINT
     offline: bool = False
+    judge_files: list[str] = field(default_factory=list)  # extra YAML judges
+    repetitions: int = 1  # runs per case; Phoenix records each one
 
     @property
     def reasoning_effort(self) -> str | None:
@@ -107,6 +109,9 @@ def build_config(args: argparse.Namespace) -> RunConfig:
         key, raw = item.split("=", 1)
         params[key.strip()] = _coerce(raw)
 
+    if args.repetitions < 1:
+        raise ValueError(f"--repetitions must be at least 1, got {args.repetitions}")
+
     system_prompt = None
     if args.system_prompt_file:
         with open(args.system_prompt_file, encoding="utf-8") as f:
@@ -132,6 +137,8 @@ def build_config(args: argparse.Namespace) -> RunConfig:
         dataset_name=dataset_name,
         collector_endpoint=collector,
         offline=args.offline,
+        judge_files=list(args.judge_file or []),
+        repetitions=args.repetitions,
     )
 
 
@@ -176,6 +183,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--judge-model",
         default=DEFAULT_JUDGE_MODEL,
         help=f"LLM-as-judge model. Default: {DEFAULT_JUDGE_MODEL}.",
+    )
+    p.add_argument(
+        "--judge-file",
+        action="append",
+        metavar="FILE",
+        default=[],
+        help="YAML file defining an extra binary LLM judge (repeatable). "
+        "See references/metrics.md.",
+    )
+    p.add_argument(
+        "--repetitions",
+        type=int,
+        default=1,
+        help="Times to run each case. Default: 1.",
     )
     p.add_argument(
         "--experiment-name",

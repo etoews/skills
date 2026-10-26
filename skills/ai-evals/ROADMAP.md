@@ -27,7 +27,7 @@ under the most recently completed milestone.
 | [M8: Conform to the Python standard](#m8-conform-to-the-python-standard) | M | ✅ Complete |
 | [M9: Discover what's new in a model and what to change about prompting](#m9-discover-whats-new-in-a-model-and-what-to-change-about-prompting) | S | ⬜ Next |
 | [M10: CI](#m10-ci) | S | ⬜ Not started |
-| [M11: Richer evaluation](#m11-richer-evaluation) | M | ⬜ Deferred |
+| [M11: Richer evaluation](#m11-richer-evaluation) | M | 🟨 In progress |
 | [M12: Provider breadth](#m12-provider-breadth) | S | ⬜ Deferred |
 
 **Sizes:** S = a session. M = a few focused sessions, expect some debugging.
@@ -274,8 +274,9 @@ Promote items from the design's YAGNI list as real need appears.
 
 **Deliverables**
 - [ ] Rubric / multi-point ground truth (beyond a single `expected` string).
-- [ ] Additional or swappable LLM-as-judge metrics (the evaluator list is
-  already extensible).
+- [x] Additional LLM-as-judge metrics: `--judge-file` loads a binary judge from
+  YAML, without a code change.
+- [ ] Swappable LLM-as-judge metrics (replace or turn off a built-in one).
 - [ ] Optional non-LLM metrics (exact match, embedding similarity) for cases
   where a deterministic signal is enough.
 

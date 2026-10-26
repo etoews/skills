@@ -39,7 +39,30 @@ illustrative only:
 - relevance: fraction of question keywords the answer touches
 - faithfulness: fraction of answer tokens supported by the reference
 
-## Adding a metric
+## Adding a judge from a YAML file
+
+For a judge specific to one dataset, such as a style rubric, write a YAML file
+and pass it with `--judge-file` (repeatable). No code change is needed:
+
+```yaml
+name: plain_style        # metric name in Phoenix; must not be a built-in name
+positive: pass           # label that scores 1.0
+negative: fail           # label that scores 0.0
+prompt: |
+  Does this documentation use short sentences and the active voice?
+  Label "pass" or "fail" and quote the worst lapse.
+
+  [Documentation]
+  {answer}
+```
+
+The prompt must contain `{answer}` and may use `{question}` and `{reference}`.
+They are replaced literally, so other braces in the rubric are safe. The judge
+gets the same strict label schema as the built-in metrics. Offline mode scores
+these judges with the correctness heuristic, so offline scores stay
+illustrative.
+
+## Adding a metric to the skill
 
 Add a `_MetricSpec` to `_SPECS` in `scripts/evaluators.py` with a name, positive
 and negative labels, a prompt builder `(question, answer, reference) -> str`, and

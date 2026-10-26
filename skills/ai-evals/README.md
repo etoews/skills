@@ -83,7 +83,8 @@ dataset, the task (thing under test), and the graders.
 - **`scripts/model.py`** - the task: calls the model under test via LiteLLM, or
   returns a deterministic stub in `--offline` mode.
 - **`scripts/evaluators.py`** - three `create_evaluator(kind="LLM")` judges
-  backed by a `phoenix.evals.LLM` (real) or token-overlap heuristics (offline).
+  backed by a `phoenix.evals.LLM` (real) or token-overlap heuristics (offline),
+  plus any extra binary judges loaded from `--judge-file` YAML.
 - **`scripts/run_eval.py`** - the entrypoint that wires it together and prints
   the summary. It first switches TLS verification to the OS trust store so
   corporate TLS-inspection proxies work on Python 3.13+ (see
@@ -112,7 +113,8 @@ dataset, the task (thing under test), and the graders.
   Offline runs also show no tokens or cost - the stubs make no LLM calls.
 - **LLM-as-judge scores vary run to run.** The same model on the same prompts
   can flip a borderline case between runs. Judge each metric drop by reading
-  the explanation in Phoenix, and prefer more cases over rerunning few.
+  the explanation in Phoenix. Use `--repetitions` to see the spread, and
+  prefer more cases over rerunning few.
 - **Cross-provider effort is approximate.** `effort` maps differently per
   provider; compare within a provider for the cleanest signal.
 - **LLM-as-judge is noisy.** Treat a metric drop as a lead to inspect in the

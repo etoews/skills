@@ -11,6 +11,9 @@ context here):
 Each evaluator is a Phoenix experiment evaluator (`create_evaluator(kind="LLM")`)
 taking `(input, output, expected)` and returning `(score, label, explanation)`.
 
+Extra binary judges (for example a style rubric) load from YAML files passed with
+`--judge-file`; see `load_judge_file`.
+
 Real mode judges with a `phoenix.evals.LLM` (routed through LiteLLM) using
 structured output. Offline mode uses a deterministic token-overlap heuristic so
 the pipeline runs with no API key; heuristic scores are illustrative, not real.
@@ -18,14 +21,18 @@ the pipeline runs with no API key; heuristic scores are illustrative, not real.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+import yaml
 from phoenix.client.experiments import create_evaluator
 
 from config import RunConfig
+
+logger = logging.getLogger(__name__)
 
 # --- text helpers -----------------------------------------------------------
 
@@ -129,6 +136,47 @@ _SPECS = [
 ]
 
 
+_PLACEHOLDERS = ("{question}", "{answer}", "{reference}")
+
+
+def load_judge_file(path: str) -> _MetricSpec:
+    """Load an extra binary LLM judge from a YAML file.
+
+    The file needs `name`, `positive`, `negative` and `prompt`. The prompt must
+    contain `{answer}` and may contain `{question}` and `{reference}`; those
+    placeholders are replaced literally, so other braces in the rubric are safe.
+    Offline mode scores these judges with the correctness heuristic.
+
+    Raises:
+        ValueError: the file is not a mapping, lacks a key, has no `{answer}`
+            placeholder, or reuses a built-in metric name.
+    """
+    with open(path, encoding="utf-8") as f:
+        doc = yaml.safe_load(f)
+    if not isinstance(doc, dict):
+        raise ValueError(f"{path}: expected a YAML mapping, got {type(doc).__name__}")
+    keys = ("name", "positive", "negative", "prompt")
+    missing = [k for k in keys if not str(doc.get(k) or "").strip()]
+    if missing:
+        raise ValueError(f"{path}: missing required key(s): {', '.join(missing)}")
+    name, positive, negative, template = (str(doc[k]).strip() for k in keys)
+    if "{answer}" not in template:
+        raise ValueError(f"{path}: prompt must contain the {{answer}} placeholder")
+    if name in {spec.name for spec in _SPECS}:
+        raise ValueError(f"{path}: {name!r} is a built-in metric name")
+
+    def prompt(question: str, answer: str, reference: str) -> str:
+        out = template
+        for placeholder, value in zip(
+            _PLACEHOLDERS, (question, answer, reference), strict=True
+        ):
+            out = out.replace(placeholder, value)
+        return out
+
+    logger.info("loaded judge %r from %s", name, path)
+    return _MetricSpec(name, positive, negative, prompt, _jaccard)
+
+
 def _schema(positive: str, negative: str) -> dict[str, Any]:
     return {
         "type": "object",
@@ -181,8 +229,14 @@ def make_evaluators(cfg: RunConfig) -> list[Any]:
         provider, model = _split_judge_model(cfg.judge_model)
         judge = LLM(provider=provider, model=model, client="litellm")
 
+    specs = _SPECS + [load_judge_file(path) for path in cfg.judge_files]
+    names = [spec.name for spec in specs]
+    duplicates = sorted({n for n in names if names.count(n) > 1})
+    if duplicates:
+        raise ValueError(f"duplicate judge name(s): {', '.join(duplicates)}")
+
     evaluators: list[Any] = []
-    for spec in _SPECS:
+    for spec in specs:
         fn = _build_eval_fn(spec, judge, cfg.offline)
         evaluators.append(create_evaluator(kind="LLM", name=spec.name)(fn))
     return evaluators

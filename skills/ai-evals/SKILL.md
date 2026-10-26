@@ -76,7 +76,9 @@ experiments to compare per-case scores and outputs side by side.
 
 Vary anything you want to test: `--effort`, `--temperature`, `--max-tokens`,
 `--system-prompt-file`, `--judge-model`, or arbitrary `--param KEY=VALUE`
-(repeatable). Run `uv run python scripts/run_eval.py --help` for the full list.
+(repeatable). Add `--repetitions N` to run each case N times, and
+`--judge-file FILE` (repeatable) to add a binary judge the three metrics don't
+cover, such as a style rubric (see `references/metrics.md`). Run `uv run python scripts/run_eval.py --help` for the full list.
 
 ## No API key? Smoke-test the pipeline offline
 
