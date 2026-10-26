@@ -13,7 +13,7 @@ the stub's quality is keyed off each case's `metadata.demo_quality`
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from config import ANTHROPIC_EFFORT, ANTHROPIC_EFFORT_MIN_MAX_TOKENS, RunConfig
 
@@ -65,7 +65,11 @@ def _make_litellm_task(cfg: RunConfig) -> Callable[..., str]:
         elif cfg.reasoning_effort:
             kwargs["reasoning_effort"] = cfg.reasoning_effort
 
-        resp = litellm.completion(model=cfg.model, messages=messages, **kwargs)
+        # Never streamed, so completion() returns a ModelResponse, not a stream.
+        resp = cast(
+            "litellm.ModelResponse",
+            litellm.completion(model=cfg.model, messages=messages, **kwargs),
+        )
         return (resp.choices[0].message.content or "").strip()
 
     return task

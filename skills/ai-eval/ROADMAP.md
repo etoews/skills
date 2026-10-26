@@ -45,20 +45,23 @@ independently orderable. M8 is complete, so M9 and M10 are both unblocked.
 - [x] Skill directory with `SKILL.md` (when-to-use + quickstart) and `README.md`
   (architecture, data flow, limits).
 - [x] uv-managed project: `pyproject.toml`, committed `uv.lock`,
-  `.python-version` pinned to the arize-phoenix / litellm support window
-  (`>=3.10,<3.13`).
+  `.python-version` pinned to the Phoenix client/evals / litellm support window
+  (`>=3.11,<3.13`).
 - [x] `compose.yaml` for local Phoenix (`arizephoenix/phoenix:latest`, UI +
   collector on `:6006`, gRPC on `:4317`, data in a named volume).
-- [x] Docker-free fallback documented: `uv run phoenix serve` on the same port.
+- [x] Docker-free fallback documented: `uvx --from arize-phoenix phoenix serve`
+  on the same port, in its own env so the server's deps never constrain the
+  eval env (Phoenix 20 needs openai 3; litellm caps openai below 3).
 - [x] Approved design spec committed under `docs/superpowers/specs/`.
 
 **Hands-on artefact**
-- [x] `docker compose up -d` (or `uv run phoenix serve`) then open
+- [x] `docker compose up -d` (or `uvx --from arize-phoenix phoenix serve`) then open
   `http://localhost:6006`.
 - [x] `uv sync` creates the env.
 
 **Notes**
-- Docker Hub pulls can hang here; `uv run phoenix serve` is the reliable path.
+- Docker Hub pulls can hang here; `uvx --from arize-phoenix phoenix serve` is the
+  reliable path.
 
 ---
 

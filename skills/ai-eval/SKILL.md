@@ -28,8 +28,9 @@ docker compose up -d          # start local Phoenix -> http://localhost:6006
 uv sync                       # create the Python env
 ```
 
-No Docker (or can't reach Docker Hub)? Serve the same Phoenix straight from the
-env instead: `uv sync && uv run phoenix serve` (also on `http://localhost:6006`).
+No Docker (or can't reach Docker Hub)? Serve the same Phoenix from its own
+isolated env instead: `uvx --from arize-phoenix phoenix serve` (also on
+`http://localhost:6006`).
 The eval commands below are identical either way.
 
 Provide a provider key for real runs (skip for `--offline`): put
