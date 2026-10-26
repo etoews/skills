@@ -1,4 +1,4 @@
-# ai-eval skill — design
+# ai-evals skill — design
 
 **Date:** 2026-07-03
 **Status:** Approved (design), implementation in progress
@@ -55,7 +55,7 @@ supplies: the prompts+ground-truth (dataset), the thing under test (task), and
 the graders (evaluators).
 
 ```
-skills/ai-eval/
+skills/ai-evals/
   SKILL.md              # when-to-use + quickstart; detail pushed to references/
   README.md             # architecture, data flow, limits
   compose.yaml          # arizephoenix/phoenix:latest, ports 6006/4317, named volume

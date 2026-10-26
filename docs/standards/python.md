@@ -7,7 +7,7 @@ The Python development standard for this repo. Distilled from the
 narrowed to what Python work in *this* repo actually needs.
 
 This repo is a collection of Claude skills. The only Python in it today is the
-[`ai-eval`](../../skills/ai-eval/) skill: a uv-managed project with `scripts/`,
+[`ai-evals`](../../skills/ai-evals/) skill: a uv-managed project with `scripts/`,
 `tests/`, `pyproject.toml`, and a committed `uv.lock`. Follow this file for any
 Python work here. For the exhaustive per-project playbook and one-time machine
 setup, read the [etoews/python-standards](https://github.com/etoews/python-standards) reference.
@@ -64,7 +64,7 @@ Single source of truth for metadata, deps, and tool config.
   there).
 - **`requires-python`** matches the project's real support window. Prefer the
   current default (3.14) for new work, but a heavy-dependency project may need a
-  narrower range: `ai-eval` allows `>=3.11,<3.15` (the Phoenix libraries need
+  narrower range: `ai-evals` allows `>=3.11,<3.15` (the Phoenix libraries need
   3.11+) and develops on 3.14. Keep it as tight as the deps demand and no tighter.
 - Tool config (`[tool.ruff]`, `[tool.pytest.ini_options]`, `[tool.ty]`) lives
   here rather than in scattered dotfiles.

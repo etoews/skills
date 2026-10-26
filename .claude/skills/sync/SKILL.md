@@ -62,9 +62,9 @@ Create links relative, as the table shows, matching the existing entries in
 
 Some state is deliberately local and must not reach the repo or be cleaned up:
 
-- `skills/ai-eval/.env`: real API keys, gitignored. Never commit it, never
+- `skills/ai-evals/.env`: real API keys, gitignored. Never commit it, never
   delete it.
-- `skills/ai-eval/.venv/`, `phoenix_data/`, `__pycache__/`, `.scratch/`:
+- `skills/ai-evals/.venv/`, `phoenix_data/`, `__pycache__/`, `.scratch/`:
   regenerable local state, gitignored, not drift to fix.
 - Everything in `~/.claude/skills` that does not resolve into this repo: links
   into `~/.agents/skills`, plugin and marketplace skills. They are other

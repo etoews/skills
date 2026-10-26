@@ -1,9 +1,9 @@
 ---
-name: ai-eval
+name: ai-evals
 description: Use when someone wants to evaluate an LLM configuration (a new model, effort/reasoning level, temperature, or other parameters) against their own prompts with known-good "ground truth" answers, and track correctness, relevance, and faithfulness. Runs as an Arize Phoenix experiment on local Docker Compose so runs can be compared (e.g. Opus 4.8 xhigh baseline vs a newer model). Works offline (no API key) for a pipeline smoke test.
 ---
 
-# ai-eval
+# ai-evals
 
 Run a repeatable evaluation of one LLM configuration against prompts with
 known-good answers, in a locally-hosted [Arize Phoenix](https://github.com/Arize-ai/phoenix).
@@ -17,11 +17,11 @@ experiment, records scores, and provides the compare UI. It never calls an LLM.
 The skill supplies the prompts+ground-truth, the model under test, and the three
 LLM-as-judge graders (**correctness**, **relevance**, **faithfulness**).
 
-Announce at start: "I'm using the ai-eval skill to run a Phoenix experiment."
+Announce at start: "I'm using the ai-evals skill to run a Phoenix experiment."
 
 ## Setup (once)
 
-All commands run from the skill directory (`skills/ai-eval/`).
+All commands run from the skill directory (`skills/ai-evals/`).
 
 ```bash
 docker compose up -d          # start local Phoenix -> http://localhost:6006

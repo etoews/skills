@@ -1,9 +1,9 @@
-# ai-eval Roadmap
+# ai-evals Roadmap
 
 Build order, deliverables, and a hands-on artefact at every milestone.
 
 For the full design rationale, see
-[../../docs/superpowers/specs/2026-07-03-ai-eval-skill-design.md](../../docs/superpowers/specs/2026-07-03-ai-eval-skill-design.md).
+[../../docs/superpowers/specs/2026-07-03-ai-evals-skill-design.md](../../docs/superpowers/specs/2026-07-03-ai-evals-skill-design.md).
 Python work on this skill follows
 [../../docs/standards/python.md](../../docs/standards/python.md).
 
@@ -258,13 +258,13 @@ compare UI, no bespoke diff report (a load-bearing design decision).
 ## M10: CI
 
 **Deliverables**
-- [ ] GitHub Actions workflow scoped to the `ai-eval` path: `uv sync --locked`,
+- [ ] GitHub Actions workflow scoped to the `ai-evals` path: `uv sync --locked`,
   `ruff check`, `ruff format --check`, `ty check`, `pytest` (unit suite only, no
   Docker or key in CI).
 - [ ] Pin `astral-sh/setup-uv` to a major tag; bump deliberately.
 
 **Hands-on artefact**
-- [ ] A PR touching `skills/ai-eval/` runs the checks and blocks on failure.
+- [ ] A PR touching `skills/ai-evals/` runs the checks and blocks on failure.
 
 ---
 

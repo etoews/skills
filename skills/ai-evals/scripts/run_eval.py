@@ -1,4 +1,4 @@
-"""ai-eval entrypoint: run one config against a prompt+ground-truth dataset.
+"""ai-evals entrypoint: run one config against a prompt+ground-truth dataset.
 
     uv run python scripts/run_eval.py \
         --dataset datasets/example \
@@ -89,7 +89,7 @@ def _print_summary(ran: Any, cfg: RunConfig, n_cases: int) -> None:
         if score is not None:
             scores[name].append(score)
 
-    print("\n=== ai-eval summary ===")
+    print("\n=== ai-evals summary ===")
     print(f"experiment : {cfg.experiment_name}")
     print(f"dataset    : {cfg.dataset_name}  ({n_cases} cases)")
     print(

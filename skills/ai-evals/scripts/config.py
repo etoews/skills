@@ -1,4 +1,4 @@
-"""Run configuration + CLI parsing for the ai-eval skill.
+"""Run configuration + CLI parsing for the ai-evals skill.
 
 One invocation of the skill evaluates exactly one configuration (a model, an
 effort level, and any extra LLM parameters) against a dataset of prompts with

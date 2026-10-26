@@ -1,4 +1,4 @@
-# Local Arize Phoenix for the ai-eval skill.
+# Local Arize Phoenix for the ai-evals skill.
 #   docker compose up -d      # start Phoenix (UI + collector on :6006)
 #   docker compose down       # stop; add -v to also delete the data volume
 #

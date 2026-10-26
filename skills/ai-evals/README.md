@@ -1,4 +1,4 @@
-# ai-eval
+# ai-evals
 
 Run repeatable LLM evaluations in a locally-hosted Arize Phoenix against your own
 prompts and known-good ("ground truth") answers. Each run is a Phoenix
@@ -12,12 +12,12 @@ and its limits. For the raw commands, see [`SKILL.md`](SKILL.md).
 ## Using it from Claude Code
 
 First install the skill where Claude Code discovers skills - symlink or copy the
-`ai-eval` directory into `~/.claude/skills/` or `<project>/.claude/skills/` (see
+`ai-evals` directory into `~/.claude/skills/` or `<project>/.claude/skills/` (see
 the [repo README](../../README.md)). Then, in a Claude Code session, run it by
 typing:
 
 ```
-/ai-eval
+/ai-evals
 ```
 
 That invokes the skill: Claude reads `SKILL.md` and drives the whole run for you.
@@ -26,7 +26,7 @@ You supply three things (Claude asks for whatever is missing) - the **dataset**
 and a **baseline** to compare against. For example:
 
 ```
-/ai-eval evaluate claude-fable-5 at xhigh against ./my-prompts, baseline opus-4.8-xhigh
+/ai-evals evaluate claude-fable-5 at xhigh against ./my-prompts, baseline opus-4.8-xhigh
 ```
 
 A typical session:
@@ -36,14 +36,14 @@ sequenceDiagram
     actor You
     participant Claude
     participant Phoenix as Local Phoenix
-    You->>Claude: /ai-eval
+    You->>Claude: /ai-evals
     Claude->>Phoenix: start Phoenix
     Claude->>Phoenix: run the eval per config
     Phoenix-->>Claude: scores
     Claude-->>You: per-metric means + compare link
 ```
 
-1. **You** type `/ai-eval` with (optionally) what to test and where your prompts
+1. **You** type `/ai-evals` with (optionally) what to test and where your prompts
    live.
 2. **Claude** starts local Phoenix, prepares the env, and checks for a provider
    key - offering an `--offline` pipeline smoke test if none is set.
@@ -53,7 +53,7 @@ sequenceDiagram
    faithfulness) and links the Phoenix compare view, where you read each case's
    output and the judge's explanation.
 
-To add a comparison later, run `/ai-eval` again with a new config on the same
+To add a comparison later, run `/ai-evals` again with a new config on the same
 dataset - Phoenix keeps every run as a comparable experiment.
 
 ## Flow

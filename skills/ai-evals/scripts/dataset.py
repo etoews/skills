@@ -92,5 +92,5 @@ def sync_dataset(client: Any, name: str, cases: list[Case]) -> Any:
         inputs=inputs,
         outputs=outputs,
         metadata=metadata,
-        dataset_description="ai-eval prompts with ground-truth answers",
+        dataset_description="ai-evals prompts with ground-truth answers",
     )
