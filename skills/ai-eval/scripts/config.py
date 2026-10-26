@@ -42,7 +42,7 @@ ANTHROPIC_EFFORT = {
 # toward max_tokens, so a small cap would truncate the answer mid-thought.
 ANTHROPIC_EFFORT_MIN_MAX_TOKENS = 16_000
 
-DEFAULT_JUDGE_MODEL = "anthropic/claude-sonnet-4-5"
+DEFAULT_JUDGE_MODEL = "anthropic/claude-fable-5-1"
 DEFAULT_COLLECTOR_ENDPOINT = "http://localhost:6006"
 
 

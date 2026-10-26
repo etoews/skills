@@ -12,7 +12,7 @@ The model under test is invoked through [LiteLLM](https://docs.litellm.ai/), so
 
 Put keys in a `.env` file in the skill directory (git-ignored) or export them;
 `run_eval.py` loads `.env` automatically. The same applies to `--judge-model`
-(default `anthropic/claude-sonnet-4-5`).
+(default `anthropic/claude-fable-5-1`).
 
 ## Effort
 

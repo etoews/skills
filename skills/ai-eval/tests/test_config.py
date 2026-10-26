@@ -105,7 +105,7 @@ def test_description_real_run() -> None:
     )
     assert cfg.description == (
         "anthropic/claude-fable-5 @ effort=xhigh, temp=0.2, top_p=0.9, "
-        "judge=anthropic/claude-sonnet-4-5"
+        "judge=anthropic/claude-fable-5-1"
     )
 
 
